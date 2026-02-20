@@ -4,270 +4,388 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0a0a1a">
+    <meta name="theme-color" content="#f5f5f7">
     <title>CANR — Canvas to Reality</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23007AFF'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='system-ui' font-weight='700'>CR</text></svg>">
     <style>
+        /* ===== Apple Design System ===== */
         :root {
-            --bg: #0a0a1a;
-            --surface: #151528;
-            --border: #2a2a4a;
-            --text: #e0e0f0;
-            --dim: #8888aa;
-            --accent: #6c63ff;
-            --accent2: #ff6584;
+            --bg: #f5f5f7;
+            --surface: #ffffff;
+            --surface2: #f2f2f7;
+            --border: rgba(0,0,0,0.08);
+            --text: #1d1d1f;
+            --text2: #86868b;
+            --text3: #aeaeb2;
+            --blue: #007AFF;
+            --blue-hover: #0066d6;
+            --red: #FF3B30;
+            --green: #34C759;
+            --orange: #FF9500;
+            --fill-active: #007AFF;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --glass: rgba(255,255,255,0.72);
+            --glass-border: rgba(255,255,255,0.5);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
             background: var(--bg);
             color: var(--text);
-            height: 100dvh;
-            width: 100vw;
+            height: 100dvh; width: 100vw;
             overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
+            user-select: none; -webkit-user-select: none;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== Loading Screen ===== */
+        /* ===== Loading ===== */
         #loading-screen {
-            position: fixed; inset: 0;
+            position: fixed; inset: 0; z-index: 1000;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            background: var(--bg); z-index: 1000;
-            transition: opacity 0.6s ease;
+            background: var(--bg);
+            transition: opacity 0.5s ease;
         }
         #loading-screen.done { opacity: 0; pointer-events: none; }
-        #loading-screen h1 {
-            font-size: 2.5rem; font-weight: 800;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .load-icon {
+            width: 64px; height: 64px; border-radius: 16px;
+            background: var(--blue);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 24px; font-weight: 700;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
         }
-        #loading-screen .subtitle { color: var(--dim); margin: 0.5rem 0 2.5rem; font-size: 0.95rem; }
-        .load-section { width: min(420px, 85vw); margin-bottom: 1.2rem; }
-        .load-label { font-size: 0.8rem; color: var(--dim); display: flex; justify-content: space-between; }
-        .load-bar { height: 5px; background: var(--surface); border-radius: 3px; margin-top: 0.4rem; overflow: hidden; }
+        .load-title { font-size: 22px; font-weight: 600; color: var(--text); }
+        .load-subtitle { font-size: 15px; color: var(--text2); margin-top: 4px; }
+        .load-progress { width: min(360px, 80vw); margin-top: 32px; }
+        .load-row { margin-bottom: 16px; }
+        .load-row-label {
+            display: flex; justify-content: space-between;
+            font-size: 13px; color: var(--text2); margin-bottom: 6px;
+        }
+        .load-track {
+            height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden;
+        }
         .load-fill {
-            height: 100%; width: 0%; border-radius: 3px;
-            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            height: 100%; width: 0%; border-radius: 2px;
+            background: var(--blue);
             transition: width 0.3s ease;
         }
-        .load-note { color: var(--dim); font-size: 0.75rem; margin-top: 2rem; text-align: center; }
-        .load-error { color: var(--accent2); margin-top: 1rem; font-size: 0.85rem; max-width: 80vw; text-align: center; }
-
-        /* ===== App Layout ===== */
-        #app {
-            display: none; flex-direction: column;
-            height: 100dvh;
+        .load-status {
+            font-size: 13px; color: var(--text3); text-align: center; margin-top: 24px;
         }
+        .load-error {
+            font-size: 13px; color: var(--red); text-align: center;
+            margin-top: 12px; display: none; max-width: 80vw;
+        }
+
+        /* ===== App ===== */
+        #app { display: none; flex-direction: column; height: 100dvh; }
         #app.active { display: flex; }
 
-        /* Header */
-        .header {
+        /* Navbar */
+        .navbar {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0.4rem 1rem;
-            border-bottom: 1px solid var(--border);
-            flex-shrink: 0; min-height: 40px;
+            padding: 0 16px; height: 48px;
+            background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid var(--border);
+            flex-shrink: 0; z-index: 10;
         }
-        .header .logo {
-            font-size: 1rem; font-weight: 800;
-            background: linear-gradient(135deg, var(--accent), var(--accent2));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .navbar-title {
+            font-size: 17px; font-weight: 600; letter-spacing: -0.2px;
         }
-        #status { font-size: 0.75rem; color: var(--dim); font-family: monospace; }
+        .navbar-status {
+            font-size: 12px; color: var(--text2);
+            font-variant-numeric: tabular-nums;
+        }
 
-        /* Canvas Area */
+        /* Canvas area */
         .canvas-area {
-            flex: 1; display: flex; gap: 4px;
-            padding: 0.5rem; min-height: 0; overflow: hidden;
+            flex: 1; display: flex; gap: 1px;
+            background: var(--border);
+            min-height: 0; overflow: hidden;
         }
         .pane {
             flex: 1; display: flex; flex-direction: column;
-            align-items: center; min-width: 0;
+            background: var(--surface2);
+            min-width: 0; position: relative;
         }
-        .pane-label {
-            font-size: 0.65rem; color: var(--dim);
-            text-transform: uppercase; letter-spacing: 0.15em;
-            margin-bottom: 0.3rem; flex-shrink: 0;
+        .pane-header {
+            display: flex; align-items: center; justify-content: center;
+            height: 28px; flex-shrink: 0;
+            font-size: 11px; font-weight: 500; color: var(--text3);
+            text-transform: uppercase; letter-spacing: 0.8px;
         }
-        .pane-frame {
-            flex: 1; display: flex; align-items: center;
-            justify-content: center; min-height: 0; width: 100%;
+        .pane-body {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            padding: 8px; min-height: 0;
         }
         canvas {
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             max-width: 100%; max-height: 100%;
+            box-shadow: var(--shadow);
         }
         #sketch {
             background: #fff; cursor: crosshair; touch-action: none;
-            box-shadow: 0 0 0 1px var(--border);
         }
         #output {
-            background: var(--surface);
-            box-shadow: 0 0 0 1px var(--border);
+            background: var(--surface2);
         }
-        .output-pane { position: relative; }
-        .generating-bar {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            height: 3px; overflow: hidden; opacity: 0;
-            transition: opacity 0.2s;
+
+        /* Generating indicator */
+        .gen-indicator {
+            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.6); color: white;
+            font-size: 11px; font-weight: 500;
+            padding: 4px 12px; border-radius: 100px;
+            opacity: 0; transition: opacity 0.2s;
+            backdrop-filter: blur(8px);
         }
-        .generating-bar.active { opacity: 1; }
-        .generating-bar::after {
-            content: ''; display: block; height: 100%;
-            background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
-            animation: slide 1.2s ease-in-out infinite;
+        .gen-indicator.active { opacity: 1; }
+
+        /* Bottom bar */
+        .bottom-bar {
+            background: var(--glass);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 0.5px solid var(--border);
+            flex-shrink: 0;
         }
-        @keyframes slide { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
 
         /* Toolbar */
         .toolbar {
-            display: flex; align-items: center; gap: 0.4rem;
-            padding: 0.4rem 0.75rem;
-            border-top: 1px solid var(--border);
-            flex-shrink: 0; flex-wrap: wrap;
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 12px;
         }
-        .tgroup { display: flex; gap: 0.2rem; align-items: center; }
-        .tgroup.push-right { margin-left: auto; }
-        .tlabel { font-size: 0.65rem; color: var(--dim); margin-right: 0.2rem; white-space: nowrap; }
-        button {
-            background: var(--surface); color: var(--text);
-            border: 1px solid var(--border); border-radius: 6px;
-            padding: 0.35rem 0.7rem; font-size: 0.78rem;
-            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        .tool-group {
+            display: flex; align-items: center; gap: 2px;
         }
-        button:active { transform: scale(0.95); }
-        button:hover { border-color: var(--accent); }
-        button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .tool-sep {
+            width: 1px; height: 20px; background: var(--border); margin: 0 4px;
+        }
+        .spacer { flex: 1; }
+
+        /* Segmented control (Apple-style) */
+        .seg-control {
+            display: flex; background: var(--surface2);
+            border-radius: 8px; padding: 2px; position: relative;
+        }
+        .seg-btn {
+            padding: 5px 12px; font-size: 13px; font-weight: 500;
+            border: none; background: none; color: var(--text2);
+            border-radius: 6px; cursor: pointer;
+            transition: all 0.2s ease; position: relative; z-index: 1;
+        }
+        .seg-btn.active {
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Icon buttons */
+        .icon-btn {
+            width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            border: none; background: var(--surface2);
+            border-radius: var(--radius-sm); cursor: pointer;
+            color: var(--text); font-size: 16px;
+            transition: all 0.15s ease;
+        }
+        .icon-btn:hover { background: #e8e8ed; }
+        .icon-btn:active { transform: scale(0.92); }
+        .icon-btn.accent { background: var(--blue); color: white; }
+        .icon-btn.accent:hover { background: var(--blue-hover); }
+        .icon-btn svg { width: 18px; height: 18px; }
+
+        /* Slider (Apple-style) */
+        .slider-group {
+            display: flex; align-items: center; gap: 6px;
+        }
+        .slider-label {
+            font-size: 11px; color: var(--text3); font-weight: 500;
+            min-width: 32px;
+        }
         input[type=range] {
             -webkit-appearance: none; appearance: none;
-            height: 4px; background: var(--border); border-radius: 2px; outline: none;
-            width: 70px;
+            height: 4px; background: var(--surface2);
+            border-radius: 2px; outline: none; width: 80px;
         }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 14px; height: 14px;
-            background: var(--accent); border-radius: 50%; cursor: pointer;
+            -webkit-appearance: none;
+            width: 20px; height: 20px;
+            background: var(--surface);
+            border-radius: 50%; cursor: pointer;
+            box-shadow: 0 0.5px 4px rgba(0,0,0,0.15), 0 0 0.5px rgba(0,0,0,0.1);
         }
 
         /* Prompt */
-        .prompt-bar {
-            display: flex; gap: 0.4rem; padding: 0.4rem 0.75rem;
-            border-top: 1px solid var(--border); flex-shrink: 0;
+        .prompt-row {
+            padding: 0 12px 10px;
         }
         #prompt {
-            flex: 1; background: var(--surface); color: var(--text);
-            border: 1px solid var(--border); border-radius: 6px;
-            padding: 0.45rem 0.7rem; font-size: 0.82rem; outline: none;
+            width: 100%;
+            background: var(--surface2);
+            color: var(--text);
+            border: none; border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 15px; outline: none;
+            font-family: inherit;
+            transition: box-shadow 0.2s;
         }
-        #prompt:focus { border-color: var(--accent); }
-        #prompt::placeholder { color: var(--dim); }
+        #prompt:focus {
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.2);
+        }
+        #prompt::placeholder { color: var(--text3); }
+
+        /* Brush preview */
+        #brush-preview {
+            position: fixed; pointer-events: none; z-index: 500;
+            border: 1.5px solid var(--blue);
+            border-radius: 50%; display: none;
+            opacity: 0.6;
+        }
+
+        /* Mode pill */
+        .mode-pill {
+            font-size: 11px; font-weight: 600;
+            padding: 3px 8px; border-radius: 100px;
+            border: none; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-pill.gpu { background: rgba(0,122,255,0.12); color: var(--blue); }
+        .mode-pill.cpu { background: rgba(255,149,0,0.12); color: var(--orange); }
 
         /* Responsive */
         @media (max-width: 700px) {
             .canvas-area { flex-direction: column; }
-            .pane { flex: none; height: 42%; }
-            .tgroup.push-right { margin-left: 0; }
-            .toolbar { justify-content: center; }
-            input[type=range] { width: 55px; }
+            input[type=range] { width: 60px; }
+            .slider-label { display: none; }
         }
 
-        /* brush size preview */
-        #brush-preview {
-            position: fixed; pointer-events: none; z-index: 500;
-            border: 1.5px solid var(--accent); border-radius: 50%;
-            display: none;
-        }
+        /* SVG icons inline */
+        .ico { display: inline-flex; }
     </style>
 </head>
 <body>
 
-<!-- Loading Screen -->
+<!-- Loading -->
 <div id="loading-screen">
-    <h1>CANR</h1>
-    <p class="subtitle">Canvas to Reality &mdash; AI Sketch Converter</p>
-    <div class="load-section">
-        <div class="load-label"><span>UNet + ControlNet + VAE</span><span id="unet-pct">0%</span></div>
-        <div class="load-bar"><div class="load-fill" id="unet-bar"></div></div>
+    <div class="load-icon">CR</div>
+    <div class="load-title">Canvas to Reality</div>
+    <div class="load-subtitle">AI Sketch Converter</div>
+    <div class="load-progress">
+        <div class="load-row">
+            <div class="load-row-label"><span>Neural Network</span><span id="unet-pct">0%</span></div>
+            <div class="load-track"><div class="load-fill" id="unet-bar"></div></div>
+        </div>
+        <div class="load-row">
+            <div class="load-row-label"><span>Text Encoder</span><span id="text-pct">0%</span></div>
+            <div class="load-track"><div class="load-fill" id="text-bar"></div></div>
+        </div>
     </div>
-    <div class="load-section">
-        <div class="load-label"><span>CLIP Text Encoder</span><span id="text-pct">0%</span></div>
-        <div class="load-bar"><div class="load-fill" id="text-bar"></div></div>
-    </div>
-    <p class="load-note" id="load-note">First load ~553 MB &middot; cached after download</p>
-    <p class="load-error" id="load-error" style="display:none"></p>
+    <div class="load-status" id="load-note">553 MB download on first visit</div>
+    <div class="load-error" id="load-error"></div>
 </div>
 
 <!-- App -->
 <div id="app">
-    <div class="header">
-        <span class="logo">CANR</span>
-        <span id="status">Loading...</span>
+    <div class="navbar">
+        <span class="navbar-title">Canvas to Reality</span>
+        <span class="navbar-status" id="status"></span>
     </div>
 
     <div class="canvas-area">
         <div class="pane">
-            <span class="pane-label">Sketch</span>
-            <div class="pane-frame">
+            <div class="pane-header">Sketch</div>
+            <div class="pane-body">
                 <canvas id="sketch" width="512" height="512"></canvas>
             </div>
         </div>
-        <div class="pane output-pane">
-            <span class="pane-label">Generated</span>
-            <div class="pane-frame">
+        <div class="pane">
+            <div class="pane-header">Generated</div>
+            <div class="pane-body" style="position:relative">
                 <canvas id="output" width="512" height="512"></canvas>
+                <div class="gen-indicator" id="gen-bar">Generating...</div>
             </div>
-            <div class="generating-bar" id="gen-bar"></div>
         </div>
     </div>
 
-    <div class="toolbar">
-        <div class="tgroup">
-            <button id="btn-pen" class="on" data-tool="pen">Pen</button>
-            <button id="btn-eraser" data-tool="eraser">Eraser</button>
-        </div>
-        <div class="tgroup">
-            <span class="tlabel">Size</span>
-            <input type="range" id="brush-size" min="1" max="50" value="5">
-        </div>
-        <div class="tgroup">
-            <span class="tlabel">Strength</span>
-            <input type="range" id="strength" min="20" max="100" value="70">
-        </div>
-        <div class="tgroup push-right">
-            <button id="btn-undo">Undo</button>
-            <button id="btn-clear">Clear</button>
-            <button id="btn-reroll">Reroll</button>
-            <button id="btn-mode">CPU</button>
-            <button id="btn-save">Save</button>
-        </div>
-    </div>
+    <div class="bottom-bar">
+        <div class="toolbar">
+            <!-- Tool select -->
+            <div class="seg-control" id="tool-seg">
+                <button class="seg-btn active" data-tool="pen">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+                </button>
+                <button class="seg-btn" data-tool="eraser">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l8-8 8 8-3 4z"/><path d="M6.5 13.5l5-5"/></svg>
+                </button>
+            </div>
 
-    <div class="prompt-bar">
-        <input type="text" id="prompt" placeholder="Describe what you're drawing... (e.g., a cat on a hill, watercolor style)"
-               value="watercolor painting of a landscape with mountains and trees">
+            <div class="tool-sep"></div>
+
+            <!-- Brush size -->
+            <div class="slider-group">
+                <span class="slider-label">Size</span>
+                <input type="range" id="brush-size" min="1" max="50" value="5">
+            </div>
+
+            <div class="tool-sep"></div>
+
+            <!-- Strength -->
+            <div class="slider-group">
+                <span class="slider-label">Style</span>
+                <input type="range" id="strength" min="20" max="100" value="70">
+            </div>
+
+            <div class="spacer"></div>
+
+            <!-- Actions -->
+            <button class="icon-btn" id="btn-undo" title="Undo (Ctrl+Z)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            </button>
+            <button class="icon-btn" id="btn-clear" title="Clear canvas">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </button>
+            <button class="icon-btn" id="btn-reroll" title="New random seed">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><circle cx="18" cy="18" r="4"/></svg>
+            </button>
+            <button class="icon-btn accent" id="btn-save" title="Save image">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+
+            <div class="tool-sep"></div>
+
+            <button class="mode-pill gpu" id="btn-mode" title="Switch GPU/CPU">GPU</button>
+        </div>
+
+        <div class="prompt-row">
+            <input type="text" id="prompt"
+                   placeholder="Describe your drawing... (e.g. a cat sitting on a hill)"
+                   value="watercolor painting of a landscape with mountains and trees">
+        </div>
     </div>
 </div>
 
 <div id="brush-preview"></div>
 
-<!-- Cross-Origin Isolation for WASM multi-threading -->
+<!-- COI for WASM multi-threading -->
 <script>
 if (!crossOriginIsolated && window.isSecureContext && 'serviceWorker' in navigator) {
-    // Only attempt reload once per session to avoid infinite loop
     if (!sessionStorage.getItem('coi')) {
         sessionStorage.setItem('coi', '1');
         navigator.serviceWorker.register('coi-sw.js').then(() => {
-            console.log('COI service worker registered, reloading...');
             window.location.reload();
         });
     }
 }
 </script>
 
-<!-- ONNX Runtime (pinned version) -->
+<!-- ONNX Runtime -->
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.all.min.js"></script>
 
 <script type="module">
@@ -278,11 +396,11 @@ import { AutoTokenizer } from 'https://cdn.jsdelivr.net/npm/@huggingface/transfo
 // ============================================================
 const MODEL_BASE = 'https://raw.githubusercontent.com/lsb/sdxs-controlnet-sketch/trunk';
 const MODELS = {
-    unet:    { url: `${MODEL_BASE}/sd512q68.onnx`,            size: 428957688 },
-    textEnc: { url: `${MODEL_BASE}/sd_text_encoder_q8.onnx`,  size: 123815043 },
+    unet:    { url: `${MODEL_BASE}/sd512q68.onnx`,           size: 428957688 },
+    textEnc: { url: `${MODEL_BASE}/sd_text_encoder_q8.onnx`, size: 123815043 },
 };
 const SPLIT = 50_000_000;
-const PARALLEL = 4; // concurrent chunk downloads
+const PARALLEL = 4;
 
 // ============================================================
 //  UTILS
@@ -296,7 +414,7 @@ async function fetchChunk(url, retries = 3) {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             return new Uint8Array(await res.arrayBuffer());
         } catch (e) {
-            if (attempt === retries - 1) throw new Error(`Failed after ${retries} attempts: ${url} (${e.message})`);
+            if (attempt === retries - 1) throw new Error(`Failed: ${url} (${e.message})`);
             await sleep(1000 * (attempt + 1));
         }
     }
@@ -307,7 +425,6 @@ async function fetchSplit(url, total, split, onProg) {
     const n = Math.ceil(total / split);
     let done = 0;
     const t0 = performance.now();
-
     for (let i = 0; i < n; i += PARALLEL) {
         const batch = [];
         for (let j = i; j < Math.min(i + PARALLEL, n); j++) {
@@ -315,9 +432,7 @@ async function fetchSplit(url, total, split, onProg) {
                 fetchChunk(`${url}.${String(j).padStart(3,'0')}.db`).then(chunk => {
                     buf.set(chunk, j * split);
                     done++;
-                    const elapsed = (performance.now() - t0) / 1000;
-                    const loaded = done * split;
-                    const speed = loaded / elapsed / 1024 / 1024;
+                    const speed = (done * split) / ((performance.now() - t0) / 1000) / 1048576;
                     onProg?.(done / n, speed);
                 })
             );
@@ -328,65 +443,56 @@ async function fetchSplit(url, total, split, onProg) {
 }
 
 // ============================================================
-//  ONNX SESSION MANAGEMENT
+//  ONNX
 // ============================================================
 const threads = crossOriginIsolated ? (navigator.hardwareConcurrency || 4) : 1;
 ort.env.wasm.numThreads = threads;
 console.log(`WASM threads: ${threads}, crossOriginIsolated: ${crossOriginIsolated}`);
 
-const gpuOpts = { executionProviders: ['webgpu', 'wasm'], intraOpNumThreads: threads, interOpNumThreads: threads };
-const cpuOpts = { executionProviders: ['wasm'],            intraOpNumThreads: threads, interOpNumThreads: threads };
+const gpuOpts = { executionProviders: ['webgpu','wasm'], intraOpNumThreads: threads, interOpNumThreads: threads };
+const cpuOpts = { executionProviders: ['wasm'],           intraOpNumThreads: threads, interOpNumThreads: threads };
 
-let unetSession = null;
-let textSession = null;
-let tokenizer   = null;
-let unetBuf     = null;
-let usingWebGPU = false;
+let unetSession = null, textSession = null, tokenizer = null;
+let unetBuf = null, usingWebGPU = false;
 
-// Warmup tensors for testing if WebGPU actually works
 const warmupInputs = {
-    image:              new ort.Tensor('uint8',    new Uint8Array(512*512).fill(255), [512, 512]),
-    prompt_embeds:      new ort.Tensor('float32',  new Float32Array(1*77*768),        [1, 77, 768]),
-    conditioning_scale: new ort.Tensor('float32',  [0.5],                             [1]),
-    latents:            new ort.Tensor('float32',  new Float32Array(1*4*64*64).fill(0.1), [1, 4, 64, 64]),
+    image:              new ort.Tensor('uint8',   new Uint8Array(512*512).fill(255), [512,512]),
+    prompt_embeds:      new ort.Tensor('float32', new Float32Array(1*77*768),        [1,77,768]),
+    conditioning_scale: new ort.Tensor('float32', [0.5], [1]),
+    latents:            new ort.Tensor('float32', new Float32Array(1*4*64*64).fill(0.1), [1,4,64,64]),
 };
 
 async function loadModels() {
     const noteEl = document.getElementById('load-note');
 
-    // Download UNet
     unetBuf = await fetchSplit(MODELS.unet.url, MODELS.unet.size, SPLIT, (p, speed) => {
         document.getElementById('unet-bar').style.width = (p*100)+'%';
         document.getElementById('unet-pct').textContent  = Math.round(p*100)+'%';
-        noteEl.textContent = `Downloading... ${speed.toFixed(1)} MB/s`;
+        noteEl.textContent = `${speed.toFixed(1)} MB/s`;
     });
 
-    // Try WebGPU first, fallback to WASM
     if (navigator.gpu) {
         try {
-            noteEl.textContent = 'Initializing UNet (WebGPU)...';
+            noteEl.textContent = 'Initializing WebGPU...';
             unetSession = await ort.InferenceSession.create(unetBuf, gpuOpts);
-            // Warmup — some GPUs crash here, not at session creation
-            noteEl.textContent = 'WebGPU warmup...';
+            noteEl.textContent = 'Warming up...';
             await unetSession.run(warmupInputs);
             usingWebGPU = true;
             console.log('WebGPU session OK');
         } catch (e) {
-            console.warn('WebGPU failed, falling back to WASM:', e.message);
+            console.warn('WebGPU failed:', e.message);
             unetSession = null;
         }
     }
     if (!unetSession) {
-        noteEl.textContent = 'Initializing UNet (WASM)...';
+        noteEl.textContent = `Initializing CPU (${threads} threads)...`;
         unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
-        console.log(`WASM session OK (${threads} threads)`);
     }
 
-    // Download + init text encoder (always WASM)
     const textBuf = await fetchSplit(MODELS.textEnc.url, MODELS.textEnc.size, SPLIT, (p, speed) => {
         document.getElementById('text-bar').style.width = (p*100)+'%';
         document.getElementById('text-pct').textContent  = Math.round(p*100)+'%';
-        noteEl.textContent = `Downloading... ${speed.toFixed(1)} MB/s`;
+        noteEl.textContent = `${speed.toFixed(1)} MB/s`;
     });
     noteEl.textContent = 'Initializing text encoder...';
     textSession = await ort.InferenceSession.create(textBuf, cpuOpts);
@@ -395,69 +501,60 @@ async function loadModels() {
     tokenizer = await AutoTokenizer.from_pretrained('Xenova/clip-vit-large-patch14');
 }
 
-async function switchMode(forceMode) {
+async function switchMode(mode) {
     if (!unetBuf) return;
-    const wantGPU = forceMode === 'gpu';
+    const wantGPU = mode === 'gpu';
     if (wantGPU === usingWebGPU) return;
-
-    statusEl.textContent = wantGPU ? 'Switching to WebGPU...' : 'Switching to WASM...';
+    statusEl.textContent = 'Switching...';
     try {
-        if (wantGPU) {
-            unetSession = await ort.InferenceSession.create(unetBuf, gpuOpts);
-            usingWebGPU = true;
-        } else {
-            unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
-            usingWebGPU = false;
-        }
-    } catch (e) {
-        console.warn('Mode switch failed:', e.message);
+        unetSession = await ort.InferenceSession.create(unetBuf, wantGPU ? gpuOpts : cpuOpts);
+        usingWebGPU = wantGPU;
+    } catch {
         unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
         usingWebGPU = false;
     }
-    updateModeButton();
+    updateModeUI();
     sketchDirty = true;
 }
 
-function updateModeButton() {
+function updateModeUI() {
     const btn = document.getElementById('btn-mode');
     btn.textContent = usingWebGPU ? 'GPU' : 'CPU';
-    btn.classList.toggle('on', usingWebGPU);
+    btn.className = `mode-pill ${usingWebGPU ? 'gpu' : 'cpu'}`;
 }
 
 async function fallbackToWasm() {
     unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
     usingWebGPU = false;
-    updateModeButton();
-    statusEl.textContent = `WASM mode (${threads} threads)`;
+    updateModeUI();
 }
 
 // ============================================================
-//  DRAWING CANVAS
+//  DRAWING
 // ============================================================
 const sketchEl = document.getElementById('sketch');
 const sketchCtx = sketchEl.getContext('2d', { willReadFrequently: true });
 const outputEl = document.getElementById('output');
 const outputCtx = outputEl.getContext('2d');
 const statusEl = document.getElementById('status');
-const genBar   = document.getElementById('gen-bar');
+const genBar = document.getElementById('gen-bar');
 
-// White background
 sketchCtx.fillStyle = '#fff';
 sketchCtx.fillRect(0, 0, 512, 512);
 
-// Gray placeholder on output
-outputCtx.fillStyle = '#151528';
+// Placeholder
+outputCtx.fillStyle = '#f2f2f7';
 outputCtx.fillRect(0, 0, 512, 512);
-outputCtx.fillStyle = '#8888aa';
-outputCtx.font = '16px sans-serif';
+outputCtx.fillStyle = '#aeaeb2';
+outputCtx.font = '500 15px -apple-system, system-ui, sans-serif';
 outputCtx.textAlign = 'center';
-outputCtx.fillText('Draw something on the left!', 256, 260);
+outputCtx.fillText('Draw something to generate', 256, 260);
 
 let currentTool = 'pen';
 let drawing = false;
 let lastX = 0, lastY = 0;
-let history = [];       // undo stack (ImageData)
-let sketchDirty = true; // trigger first render
+let history = [];
+let sketchDirty = true;
 
 function canvasCoords(e) {
     const r = sketchEl.getBoundingClientRect();
@@ -467,18 +564,15 @@ function canvasCoords(e) {
 }
 
 function pointerDown(e) {
-    e.preventDefault();
-    drawing = true;
+    e.preventDefault(); drawing = true;
     const p = canvasCoords(e);
     lastX = p.x; lastY = p.y;
-    // save for undo
     history.push(sketchCtx.getImageData(0, 0, 512, 512));
     if (history.length > 30) history.shift();
 }
 
 function pointerMove(e) {
     e.preventDefault();
-    // brush preview
     updateBrushPreview(e);
     if (!drawing) return;
     const p = canvasCoords(e);
@@ -497,14 +591,13 @@ function pointerMove(e) {
 
 function pointerUp(e) { if(e) e.preventDefault(); drawing = false; }
 
-sketchEl.addEventListener('pointerdown',  pointerDown);
-sketchEl.addEventListener('pointermove',  pointerMove);
-sketchEl.addEventListener('pointerup',    pointerUp);
+sketchEl.addEventListener('pointerdown', pointerDown);
+sketchEl.addEventListener('pointermove', pointerMove);
+sketchEl.addEventListener('pointerup', pointerUp);
 sketchEl.addEventListener('pointerleave', pointerUp);
 sketchEl.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
-sketchEl.addEventListener('touchmove',  e => e.preventDefault(), { passive: false });
+sketchEl.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
-// Brush size preview circle
 const brushPreview = document.getElementById('brush-preview');
 function updateBrushPreview(e) {
     const r = sketchEl.getBoundingClientRect();
@@ -512,13 +605,12 @@ function updateBrushPreview(e) {
     if (cx < r.left || cx > r.right || cy < r.top || cy > r.bottom) {
         brushPreview.style.display = 'none'; return;
     }
-    const sz = +document.getElementById('brush-size').value;
-    const displaySz = sz * (r.width / 512);
+    const sz = +document.getElementById('brush-size').value * (r.width / 512);
     brushPreview.style.display = 'block';
-    brushPreview.style.width  = displaySz + 'px';
-    brushPreview.style.height = displaySz + 'px';
-    brushPreview.style.left   = (cx - displaySz/2) + 'px';
-    brushPreview.style.top    = (cy - displaySz/2) + 'px';
+    brushPreview.style.width = sz + 'px';
+    brushPreview.style.height = sz + 'px';
+    brushPreview.style.left = (cx - sz/2) + 'px';
+    brushPreview.style.top = (cy - sz/2) + 'px';
 }
 sketchEl.addEventListener('pointerleave', () => { brushPreview.style.display = 'none'; });
 
@@ -528,8 +620,7 @@ sketchEl.addEventListener('pointerleave', () => { brushPreview.style.display = '
 document.querySelectorAll('[data-tool]').forEach(btn => {
     btn.addEventListener('click', () => {
         currentTool = btn.dataset.tool;
-        document.getElementById('btn-pen').classList.toggle('on', currentTool === 'pen');
-        document.getElementById('btn-eraser').classList.toggle('on', currentTool === 'eraser');
+        document.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('active', b === btn));
         sketchEl.style.cursor = currentTool === 'pen' ? 'crosshair' : 'cell';
     });
 });
@@ -537,31 +628,24 @@ document.querySelectorAll('[data-tool]').forEach(btn => {
 document.getElementById('btn-undo').addEventListener('click', () => {
     if (history.length) { sketchCtx.putImageData(history.pop(), 0, 0); sketchDirty = true; }
 });
-
 document.getElementById('btn-clear').addEventListener('click', () => {
     history.push(sketchCtx.getImageData(0, 0, 512, 512));
     sketchCtx.fillStyle = '#fff';
     sketchCtx.fillRect(0, 0, 512, 512);
     sketchDirty = true;
 });
-
 document.getElementById('btn-reroll').addEventListener('click', () => {
-    state.latents = makeLatents();
-    sketchDirty = true;
+    state.latents = makeLatents(); sketchDirty = true;
 });
-
 document.getElementById('btn-mode').addEventListener('click', () => {
     switchMode(usingWebGPU ? 'cpu' : 'gpu');
 });
-
 document.getElementById('btn-save').addEventListener('click', () => {
     const a = document.createElement('a');
     a.download = `canr-${Date.now()}.png`;
     a.href = outputEl.toDataURL('image/png');
     a.click();
 });
-
-// Keyboard shortcuts
 document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
     if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
@@ -571,7 +655,7 @@ document.addEventListener('keydown', e => {
 });
 
 // ============================================================
-//  INFERENCE STATE
+//  INFERENCE
 // ============================================================
 function makeLatents() {
     return new ort.Tensor('float32', Float32Array.from(
@@ -581,7 +665,7 @@ function makeLatents() {
 }
 
 const state = {
-    promptEmbeds: new ort.Tensor('float32', new Float32Array(1*77*768), [1, 77, 768]),
+    promptEmbeds: new ort.Tensor('float32', new Float32Array(1*77*768), [1,77,768]),
     promptDirty: true,
     latents: makeLatents(),
     blackCount: 0,
@@ -589,65 +673,53 @@ const state = {
 
 function getSketchTensor() {
     const px = sketchCtx.getImageData(0, 0, 512, 512).data;
-    const g = new Uint8Array(512 * 512);
-    for (let i = 0; i < 262144; i++) g[i] = px[i << 2]; // R channel
+    const g = new Uint8Array(262144);
+    for (let i = 0; i < 262144; i++) g[i] = px[i << 2];
     return new ort.Tensor('uint8', g, [512, 512]);
 }
 
 async function encodePrompt(text) {
     const tok = tokenizer([text], { padding: true, truncation: true, max_length: tokenizer.model_max_length });
-    const ids = new ort.Tensor('int64', tok.input_ids.data, [1, tokenizer.model_max_length]);
-    return (await textSession.run({ input_ids: ids })).output_embeddings;
+    return (await textSession.run({
+        input_ids: new ort.Tensor('int64', tok.input_ids.data, [1, tokenizer.model_max_length])
+    })).output_embeddings;
 }
 
-// Pre-allocate reusable tensors to reduce GC pressure
 const scaleTensor = new ort.Tensor('float32', new Float32Array(1), [1]);
 const outputImgData = new ImageData(512, 512);
 
 async function runInference() {
     scaleTensor.data[0] = +document.getElementById('strength').value / 100;
     const result = await unetSession.run({
-        image:              getSketchTensor(),
-        prompt_embeds:      state.promptEmbeds,
+        image: getSketchTensor(),
+        prompt_embeds: state.promptEmbeds,
         conditioning_scale: scaleTensor,
-        latents:            state.latents,
+        latents: state.latents,
     });
-
     const d = result.output_image.data;
 
-    // Detect black output → WebGPU failure
+    // Black output detection
     let sum = 0;
     for (let i = 0; i < 7500; i++) sum += d[i];
     if (sum === 0) {
-        if (++state.blackCount > 5) {
-            state.blackCount = 0;
-            await fallbackToWasm();
-            return;
-        }
-    } else {
-        state.blackCount = 0;
-    }
+        if (++state.blackCount > 5) { state.blackCount = 0; await fallbackToWasm(); return; }
+    } else { state.blackCount = 0; }
 
-    // Paint to output canvas (reuse pre-allocated ImageData)
     const rgba = outputImgData.data;
     for (let i = 0; i < 262144; i++) {
         const i3 = i * 3, i4 = i << 2;
-        rgba[i4]     = d[i3];
-        rgba[i4 + 1] = d[i3 + 1];
-        rgba[i4 + 2] = d[i3 + 2];
-        rgba[i4 + 3] = 255;
+        rgba[i4] = d[i3]; rgba[i4+1] = d[i3+1]; rgba[i4+2] = d[i3+2]; rgba[i4+3] = 255;
     }
     outputCtx.putImageData(outputImgData, 0, 0);
 }
 
 // ============================================================
-//  PROMPT INPUT
+//  PROMPT
 // ============================================================
 const promptEl = document.getElementById('prompt');
 let lastEncodedPrompt = '';
 let promptTimer = null;
 promptEl.addEventListener('input', () => {
-    // Debounce prompt encoding (wait 500ms after typing stops)
     clearTimeout(promptTimer);
     promptTimer = setTimeout(() => { state.promptDirty = true; }, 500);
 });
@@ -657,10 +729,8 @@ async function refreshPrompt() {
     const text = promptEl.value.trim() || 'a drawing';
     if (text === lastEncodedPrompt) { state.promptDirty = false; return; }
     state.promptDirty = false;
-    const t0 = performance.now();
     state.promptEmbeds = await encodePrompt(text);
     lastEncodedPrompt = text;
-    console.log(`Prompt encoded in ${Math.round(performance.now()-t0)}ms`);
     sketchDirty = true;
 }
 
@@ -671,35 +741,24 @@ let busy = false;
 
 async function loop() {
     if (!unetSession) { setTimeout(loop, 200); return; }
-
     await refreshPrompt();
 
     if (sketchDirty && !busy) {
-        busy = true;
-        sketchDirty = false;
+        busy = true; sketchDirty = false;
         genBar.classList.add('active');
-
         const t0 = performance.now();
         try {
             await runInference();
             const ms = Math.round(performance.now() - t0);
-            const mode = usingWebGPU ? 'GPU' : 'CPU';
-            statusEl.textContent = `${ms}ms (${ms > 0 ? Math.round(1000/ms) : '?'} FPS) [${mode}]`;
+            statusEl.textContent = `${ms}ms`;
         } catch (err) {
             console.error('Inference error:', err);
-            if (usingWebGPU) {
-                console.warn('WebGPU inference crashed, switching to WASM...');
-                await fallbackToWasm();
-                sketchDirty = true; // retry with WASM
-            } else {
-                statusEl.textContent = 'Error: ' + err.message;
-            }
+            if (usingWebGPU) { await fallbackToWasm(); sketchDirty = true; }
+            else { statusEl.textContent = 'Error'; }
         }
-
         genBar.classList.remove('active');
         busy = false;
     }
-
     setTimeout(() => requestAnimationFrame(loop), 60);
 }
 
@@ -711,15 +770,15 @@ async function init() {
         await loadModels();
         document.getElementById('loading-screen').classList.add('done');
         document.getElementById('app').classList.add('active');
-        updateModeButton();
-        statusEl.textContent = usingWebGPU ? 'Ready (WebGPU)' : `Ready (WASM, ${threads} threads)`;
+        updateModeUI();
+        statusEl.textContent = 'Ready';
         state.promptDirty = true;
         loop();
     } catch (err) {
         console.error('Init error:', err);
-        const errEl = document.getElementById('load-error');
-        errEl.style.display = 'block';
-        errEl.textContent = `Error: ${err.message}`;
+        const el = document.getElementById('load-error');
+        el.style.display = 'block';
+        el.textContent = err.message;
     }
 }
 
