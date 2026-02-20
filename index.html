@@ -7,87 +7,83 @@
     <meta name="theme-color" content="#f5f5f7">
     <title>CANR — Canvas to Reality</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23007AFF'/><text x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='system-ui' font-weight='700'>CR</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%230A84FF'/%3E%3Cstop offset='100%25' stop-color='%235E5CE6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='200' height='200' rx='44' fill='url(%23g)'/%3E%3Cpath d='M56 144Q86 74 144 56' stroke='white' stroke-width='10' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='144' cy='56' r='14' fill='white'/%3E%3Cpath d='M72 136Q96 96 128 78' stroke='white' stroke-width='4' fill='none' stroke-linecap='round' opacity='.35'/%3E%3C/svg%3E">
     <style>
-        /* ===== Apple Design System ===== */
         :root {
-            --bg: #f5f5f7;
-            --surface: #ffffff;
-            --surface2: #f2f2f7;
-            --border: rgba(0,0,0,0.08);
-            --text: #1d1d1f;
-            --text2: #86868b;
-            --text3: #aeaeb2;
-            --blue: #007AFF;
-            --blue-hover: #0066d6;
-            --red: #FF3B30;
-            --green: #34C759;
-            --orange: #FF9500;
-            --fill-active: #007AFF;
+            --bg: #f5f5f7; --surface: #ffffff; --surface2: #f2f2f7;
+            --border: rgba(0,0,0,0.08); --text: #1d1d1f; --text2: #86868b; --text3: #aeaeb2;
+            --blue: #007AFF; --blue-hover: #0066d6; --red: #FF3B30; --orange: #FF9500;
             --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
             --shadow-lg: 0 4px 16px rgba(0,0,0,0.1), 0 1px 4px rgba(0,0,0,0.06);
-            --radius: 12px;
-            --radius-sm: 8px;
+            --radius: 12px; --radius-sm: 8px;
             --glass: rgba(255,255,255,0.72);
-            --glass-border: rgba(255,255,255,0.5);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            height: 100dvh; width: 100vw;
-            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+            background: var(--bg); color: var(--text);
+            height: 100dvh; width: 100vw; overflow: hidden;
             user-select: none; -webkit-user-select: none;
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ===== Loading ===== */
-        #loading-screen {
-            position: fixed; inset: 0; z-index: 1000;
+        /* ===== Shared logo ===== */
+        .app-logo {
+            width: 72px; height: 72px;
+            border-radius: 18px;
+            box-shadow: 0 4px 14px rgba(10,132,255,0.25);
+        }
+
+        /* ===== Screens ===== */
+        .screen {
+            position: fixed; inset: 0; z-index: 100;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             background: var(--bg);
             transition: opacity 0.5s ease;
         }
-        #loading-screen.done { opacity: 0; pointer-events: none; }
-        .load-icon {
-            width: 64px; height: 64px; border-radius: 16px;
-            background: var(--blue);
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 24px; font-weight: 700;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
+        .screen.hidden { opacity: 0; pointer-events: none; }
+
+        /* ===== Model Select ===== */
+        #select-screen .title { font-size: 28px; font-weight: 700; margin-top: 20px; letter-spacing: -0.5px; }
+        #select-screen .subtitle { font-size: 15px; color: var(--text2); margin-top: 6px; }
+        .model-cards { display: flex; gap: 12px; margin-top: 32px; padding: 0 20px; max-width: 520px; width: 100%; }
+        .model-card {
+            flex: 1; background: var(--surface); border-radius: 16px;
+            padding: 20px; cursor: pointer; border: 2px solid transparent;
+            transition: all 0.2s ease; text-align: center;
+            box-shadow: var(--shadow);
         }
-        .load-title { font-size: 22px; font-weight: 600; color: var(--text); }
-        .load-subtitle { font-size: 15px; color: var(--text2); margin-top: 4px; }
+        .model-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+        .model-card .mc-icon { font-size: 32px; margin-bottom: 8px; }
+        .model-card .mc-name { font-size: 17px; font-weight: 600; }
+        .model-card .mc-size { font-size: 13px; color: var(--text2); margin-top: 4px; }
+        .model-card .mc-desc { font-size: 12px; color: var(--text3); margin-top: 8px; line-height: 1.4; }
+        .model-card .mc-badge {
+            display: inline-block; font-size: 11px; font-weight: 600;
+            padding: 2px 8px; border-radius: 100px; margin-top: 10px;
+        }
+        .badge-rec { background: rgba(0,122,255,0.1); color: var(--blue); }
+        .badge-hd { background: rgba(88,86,214,0.1); color: #5856D6; }
+
+        /* ===== Loading ===== */
+        #loading-screen { z-index: 200; }
         .load-progress { width: min(360px, 80vw); margin-top: 32px; }
         .load-row { margin-bottom: 16px; }
         .load-row-label {
             display: flex; justify-content: space-between;
             font-size: 13px; color: var(--text2); margin-bottom: 6px;
         }
-        .load-track {
-            height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden;
-        }
-        .load-fill {
-            height: 100%; width: 0%; border-radius: 2px;
-            background: var(--blue);
-            transition: width 0.3s ease;
-        }
-        .load-status {
-            font-size: 13px; color: var(--text3); text-align: center; margin-top: 24px;
-        }
-        .load-error {
-            font-size: 13px; color: var(--red); text-align: center;
-            margin-top: 12px; display: none; max-width: 80vw;
-        }
+        .load-track { height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+        .load-fill { height: 100%; width: 0%; border-radius: 2px; background: var(--blue); transition: width 0.3s ease; }
+        .load-status { font-size: 13px; color: var(--text3); text-align: center; margin-top: 24px; }
+        .load-error { font-size: 13px; color: var(--red); text-align: center; margin-top: 12px; display: none; max-width: 80vw; }
+        .load-title { font-size: 17px; font-weight: 600; margin-top: 16px; }
 
         /* ===== App ===== */
-        #app { display: none; flex-direction: column; height: 100dvh; }
+        #app { display: none; flex-direction: column; height: 100dvh; z-index: 1; position: relative; }
         #app.active { display: flex; }
 
-        /* Navbar */
         .navbar {
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 16px; height: 48px;
@@ -96,24 +92,18 @@
             border-bottom: 0.5px solid var(--border);
             flex-shrink: 0; z-index: 10;
         }
-        .navbar-title {
-            font-size: 17px; font-weight: 600; letter-spacing: -0.2px;
-        }
-        .navbar-status {
-            font-size: 12px; color: var(--text2);
-            font-variant-numeric: tabular-nums;
-        }
+        .navbar-brand { display: flex; align-items: center; gap: 8px; }
+        .navbar-logo { width: 28px; height: 28px; border-radius: 7px; }
+        .navbar-title { font-size: 17px; font-weight: 600; letter-spacing: -0.2px; }
+        .navbar-status { font-size: 12px; color: var(--text2); font-variant-numeric: tabular-nums; }
 
-        /* Canvas area */
         .canvas-area {
             flex: 1; display: flex; gap: 1px;
-            background: var(--border);
-            min-height: 0; overflow: hidden;
+            background: var(--border); min-height: 0; overflow: hidden;
         }
         .pane {
             flex: 1; display: flex; flex-direction: column;
-            background: var(--surface2);
-            min-width: 0; position: relative;
+            background: var(--surface2); min-width: 0; position: relative;
         }
         .pane-header {
             display: flex; align-items: center; justify-content: center;
@@ -125,21 +115,12 @@
             flex: 1; display: flex; align-items: center; justify-content: center;
             padding: 8px; min-height: 0;
         }
-        canvas {
-            border-radius: var(--radius-sm);
-            max-width: 100%; max-height: 100%;
-            box-shadow: var(--shadow);
-        }
-        #sketch {
-            background: #fff; cursor: crosshair; touch-action: none;
-        }
-        #output {
-            background: var(--surface2);
-        }
+        canvas { border-radius: var(--radius-sm); max-width: 100%; max-height: 100%; box-shadow: var(--shadow); }
+        #sketch { background: #fff; cursor: crosshair; touch-action: none; }
+        #output { background: var(--surface2); }
 
-        /* Generating indicator */
         .gen-indicator {
-            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
             background: rgba(0,0,0,0.6); color: white;
             font-size: 11px; font-weight: 500;
             padding: 4px 12px; border-radius: 100px;
@@ -148,52 +129,31 @@
         }
         .gen-indicator.active { opacity: 1; }
 
-        /* Bottom bar */
         .bottom-bar {
             background: var(--glass);
             backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-top: 0.5px solid var(--border);
-            flex-shrink: 0;
+            border-top: 0.5px solid var(--border); flex-shrink: 0;
         }
-
-        /* Toolbar */
-        .toolbar {
-            display: flex; align-items: center; gap: 6px;
-            padding: 8px 12px;
-        }
-        .tool-group {
-            display: flex; align-items: center; gap: 2px;
-        }
-        .tool-sep {
-            width: 1px; height: 20px; background: var(--border); margin: 0 4px;
-        }
+        .toolbar { display: flex; align-items: center; gap: 6px; padding: 8px 12px; }
+        .tool-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
         .spacer { flex: 1; }
 
-        /* Segmented control (Apple-style) */
-        .seg-control {
-            display: flex; background: var(--surface2);
-            border-radius: 8px; padding: 2px; position: relative;
-        }
+        .seg-control { display: flex; background: var(--surface2); border-radius: 8px; padding: 2px; }
         .seg-btn {
             padding: 5px 12px; font-size: 13px; font-weight: 500;
             border: none; background: none; color: var(--text2);
-            border-radius: 6px; cursor: pointer;
-            transition: all 0.2s ease; position: relative; z-index: 1;
+            border-radius: 6px; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center;
         }
-        .seg-btn.active {
-            background: var(--surface);
-            color: var(--text);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
+        .seg-btn.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .seg-btn svg { width: 16px; height: 16px; }
 
-        /* Icon buttons */
         .icon-btn {
             width: 36px; height: 36px;
             display: flex; align-items: center; justify-content: center;
             border: none; background: var(--surface2);
             border-radius: var(--radius-sm); cursor: pointer;
-            color: var(--text); font-size: 16px;
-            transition: all 0.15s ease;
+            color: var(--text); transition: all 0.15s;
         }
         .icon-btn:hover { background: #e8e8ed; }
         .icon-btn:active { transform: scale(0.92); }
@@ -201,82 +161,100 @@
         .icon-btn.accent:hover { background: var(--blue-hover); }
         .icon-btn svg { width: 18px; height: 18px; }
 
-        /* Slider (Apple-style) */
-        .slider-group {
-            display: flex; align-items: center; gap: 6px;
-        }
-        .slider-label {
-            font-size: 11px; color: var(--text3); font-weight: 500;
-            min-width: 32px;
-        }
+        .slider-group { display: flex; align-items: center; gap: 6px; }
+        .slider-label { font-size: 11px; color: var(--text3); font-weight: 500; min-width: 28px; }
         input[type=range] {
             -webkit-appearance: none; appearance: none;
-            height: 4px; background: var(--surface2);
-            border-radius: 2px; outline: none; width: 80px;
+            height: 4px; background: var(--surface2); border-radius: 2px; outline: none; width: 80px;
         }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px; height: 20px;
-            background: var(--surface);
-            border-radius: 50%; cursor: pointer;
+            -webkit-appearance: none; width: 20px; height: 20px;
+            background: var(--surface); border-radius: 50%; cursor: pointer;
             box-shadow: 0 0.5px 4px rgba(0,0,0,0.15), 0 0 0.5px rgba(0,0,0,0.1);
         }
 
-        /* Prompt */
-        .prompt-row {
-            padding: 0 12px 10px;
-        }
+        .prompt-row { padding: 0 12px 10px; }
         #prompt {
-            width: 100%;
-            background: var(--surface2);
-            color: var(--text);
-            border: none; border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 15px; outline: none;
-            font-family: inherit;
+            width: 100%; background: var(--surface2); color: var(--text);
+            border: none; border-radius: 10px; padding: 10px 14px;
+            font-size: 15px; outline: none; font-family: inherit;
             transition: box-shadow 0.2s;
         }
-        #prompt:focus {
-            box-shadow: 0 0 0 3px rgba(0,122,255,0.2);
-        }
+        #prompt:focus { box-shadow: 0 0 0 3px rgba(0,122,255,0.2); }
         #prompt::placeholder { color: var(--text3); }
 
-        /* Brush preview */
-        #brush-preview {
-            position: fixed; pointer-events: none; z-index: 500;
-            border: 1.5px solid var(--blue);
-            border-radius: 50%; display: none;
-            opacity: 0.6;
-        }
-
-        /* Mode pill */
         .mode-pill {
             font-size: 11px; font-weight: 600;
             padding: 3px 8px; border-radius: 100px;
-            border: none; cursor: pointer;
-            transition: all 0.2s;
+            border: none; cursor: pointer; transition: all 0.2s;
         }
         .mode-pill.gpu { background: rgba(0,122,255,0.12); color: var(--blue); }
         .mode-pill.cpu { background: rgba(255,149,0,0.12); color: var(--orange); }
 
-        /* Responsive */
+        #brush-preview {
+            position: fixed; pointer-events: none; z-index: 500;
+            border: 1.5px solid var(--blue); border-radius: 50%;
+            display: none; opacity: 0.6;
+        }
+
         @media (max-width: 700px) {
             .canvas-area { flex-direction: column; }
             input[type=range] { width: 60px; }
             .slider-label { display: none; }
+            .model-cards { flex-direction: column; max-width: 300px; }
         }
-
-        /* SVG icons inline */
-        .ico { display: inline-flex; }
     </style>
 </head>
 <body>
 
-<!-- Loading -->
-<div id="loading-screen">
-    <div class="load-icon">CR</div>
-    <div class="load-title">Canvas to Reality</div>
-    <div class="load-subtitle">AI Sketch Converter</div>
+<!-- ===== Inline SVG Logo (reusable) ===== -->
+<svg style="display:none">
+    <defs>
+        <linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0A84FF"/>
+            <stop offset="100%" stop-color="#5E5CE6"/>
+        </linearGradient>
+        <symbol id="logo-symbol" viewBox="0 0 200 200">
+            <rect width="200" height="200" rx="44" fill="url(#logo-grad)"/>
+            <path d="M56 144Q86 74 144 56" stroke="white" stroke-width="10" fill="none" stroke-linecap="round"/>
+            <circle cx="144" cy="56" r="14" fill="white"/>
+            <path d="M72 136Q96 96 128 78" stroke="white" stroke-width="4" fill="none" stroke-linecap="round" opacity=".35"/>
+            <path d="M86 140Q104 112 124 98" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".2"/>
+        </symbol>
+    </defs>
+</svg>
+
+<!-- ===== Model Select Screen ===== -->
+<div class="screen" id="select-screen">
+    <svg class="app-logo"><use href="#logo-symbol"/></svg>
+    <div class="title">Canvas to Reality</div>
+    <div class="subtitle">Choose model quality to get started</div>
+    <div class="model-cards">
+        <div class="model-card" data-model="compact">
+            <div class="mc-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="1.5" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <div class="mc-name">Compact</div>
+            <div class="mc-size">553 MB</div>
+            <div class="mc-desc">Fast download<br>Good for testing</div>
+            <span class="mc-badge badge-rec">Recommended</span>
+        </div>
+        <div class="model-card" data-model="hd">
+            <div class="mc-icon">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#5856D6" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+            </div>
+            <div class="mc-name">HD</div>
+            <div class="mc-size">1.2 GB</div>
+            <div class="mc-desc">Better quality<br>Full precision (fp16)</div>
+            <span class="mc-badge badge-hd">Best Quality</span>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Loading Screen ===== -->
+<div class="screen hidden" id="loading-screen">
+    <svg class="app-logo"><use href="#logo-symbol"/></svg>
+    <div class="load-title">Downloading model...</div>
     <div class="load-progress">
         <div class="load-row">
             <div class="load-row-label"><span>Neural Network</span><span id="unet-pct">0%</span></div>
@@ -287,23 +265,24 @@
             <div class="load-track"><div class="load-fill" id="text-bar"></div></div>
         </div>
     </div>
-    <div class="load-status" id="load-note">553 MB download on first visit</div>
+    <div class="load-status" id="load-note">Preparing...</div>
     <div class="load-error" id="load-error"></div>
 </div>
 
-<!-- App -->
+<!-- ===== App ===== -->
 <div id="app">
     <div class="navbar">
-        <span class="navbar-title">Canvas to Reality</span>
+        <div class="navbar-brand">
+            <svg class="navbar-logo"><use href="#logo-symbol"/></svg>
+            <span class="navbar-title">Canvas to Reality</span>
+        </div>
         <span class="navbar-status" id="status"></span>
     </div>
 
     <div class="canvas-area">
         <div class="pane">
             <div class="pane-header">Sketch</div>
-            <div class="pane-body">
-                <canvas id="sketch" width="512" height="512"></canvas>
-            </div>
+            <div class="pane-body"><canvas id="sketch" width="512" height="512"></canvas></div>
         </div>
         <div class="pane">
             <div class="pane-header">Generated</div>
@@ -316,76 +295,46 @@
 
     <div class="bottom-bar">
         <div class="toolbar">
-            <!-- Tool select -->
             <div class="seg-control" id="tool-seg">
-                <button class="seg-btn active" data-tool="pen">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
-                </button>
-                <button class="seg-btn" data-tool="eraser">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l8-8 8 8-3 4z"/><path d="M6.5 13.5l5-5"/></svg>
-                </button>
+                <button class="seg-btn active" data-tool="pen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg></button>
+                <button class="seg-btn" data-tool="eraser"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l8-8 8 8-3 4z"/><path d="M6.5 13.5l5-5"/></svg></button>
             </div>
-
             <div class="tool-sep"></div>
-
-            <!-- Brush size -->
             <div class="slider-group">
                 <span class="slider-label">Size</span>
                 <input type="range" id="brush-size" min="1" max="50" value="5">
             </div>
-
             <div class="tool-sep"></div>
-
-            <!-- Strength -->
             <div class="slider-group">
                 <span class="slider-label">Style</span>
                 <input type="range" id="strength" min="20" max="100" value="70">
             </div>
-
             <div class="spacer"></div>
-
-            <!-- Actions -->
-            <button class="icon-btn" id="btn-undo" title="Undo (Ctrl+Z)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-            </button>
-            <button class="icon-btn" id="btn-clear" title="Clear canvas">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-            </button>
-            <button class="icon-btn" id="btn-reroll" title="New random seed">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><circle cx="18" cy="18" r="4"/></svg>
-            </button>
-            <button class="icon-btn accent" id="btn-save" title="Save image">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            </button>
-
+            <button class="icon-btn" id="btn-undo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg></button>
+            <button class="icon-btn" id="btn-clear" title="Clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
+            <button class="icon-btn" id="btn-reroll" title="Reroll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg></button>
+            <button class="icon-btn accent" id="btn-save" title="Save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
             <div class="tool-sep"></div>
-
-            <button class="mode-pill gpu" id="btn-mode" title="Switch GPU/CPU">GPU</button>
+            <button class="mode-pill gpu" id="btn-mode">GPU</button>
         </div>
-
         <div class="prompt-row">
-            <input type="text" id="prompt"
-                   placeholder="Describe your drawing... (e.g. a cat sitting on a hill)"
-                   value="watercolor painting of a landscape with mountains and trees">
+            <input type="text" id="prompt" placeholder="Describe your drawing... (e.g. a cat sitting on a hill)" value="watercolor painting of a landscape with mountains and trees">
         </div>
     </div>
 </div>
 
 <div id="brush-preview"></div>
 
-<!-- COI for WASM multi-threading -->
+<!-- COI -->
 <script>
 if (!crossOriginIsolated && window.isSecureContext && 'serviceWorker' in navigator) {
     if (!sessionStorage.getItem('coi')) {
         sessionStorage.setItem('coi', '1');
-        navigator.serviceWorker.register('coi-sw.js').then(() => {
-            window.location.reload();
-        });
+        navigator.serviceWorker.register('coi-sw.js').then(() => window.location.reload());
     }
 }
 </script>
 
-<!-- ONNX Runtime -->
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.all.min.js"></script>
 
 <script type="module">
@@ -395,12 +344,37 @@ import { AutoTokenizer } from 'https://cdn.jsdelivr.net/npm/@huggingface/transfo
 //  CONFIG
 // ============================================================
 const MODEL_BASE = 'https://raw.githubusercontent.com/lsb/sdxs-controlnet-sketch/trunk';
-const MODELS = {
-    unet:    { url: `${MODEL_BASE}/sd512q68.onnx`,           size: 428957688 },
-    textEnc: { url: `${MODEL_BASE}/sd_text_encoder_q8.onnx`, size: 123815043 },
+const MODEL_PRESETS = {
+    compact: {
+        unet:    { url: `${MODEL_BASE}/sd512q68.onnx`,           size: 428957688 },
+        textEnc: { url: `${MODEL_BASE}/sd_text_encoder_q8.onnx`, size: 123815043 },
+    },
+    hd: {
+        unet:    { url: `${MODEL_BASE}/sd512fp16.onnx`,            size: 969727877 },
+        textEnc: { url: `${MODEL_BASE}/sd_text_encoder_fp16.onnx`, size: 246256653 },
+    },
 };
 const SPLIT = 50_000_000;
 const PARALLEL = 4;
+
+let selectedModels = null;
+
+// ============================================================
+//  MODEL SELECT
+// ============================================================
+function waitForModelSelect() {
+    return new Promise(resolve => {
+        document.querySelectorAll('.model-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const key = card.dataset.model;
+                selectedModels = MODEL_PRESETS[key];
+                document.getElementById('select-screen').classList.add('hidden');
+                document.getElementById('loading-screen').classList.remove('hidden');
+                resolve();
+            });
+        });
+    });
+}
 
 // ============================================================
 //  UTILS
@@ -464,8 +438,9 @@ const warmupInputs = {
 
 async function loadModels() {
     const noteEl = document.getElementById('load-note');
+    const models = selectedModels;
 
-    unetBuf = await fetchSplit(MODELS.unet.url, MODELS.unet.size, SPLIT, (p, speed) => {
+    unetBuf = await fetchSplit(models.unet.url, models.unet.size, SPLIT, (p, speed) => {
         document.getElementById('unet-bar').style.width = (p*100)+'%';
         document.getElementById('unet-pct').textContent  = Math.round(p*100)+'%';
         noteEl.textContent = `${speed.toFixed(1)} MB/s`;
@@ -475,10 +450,9 @@ async function loadModels() {
         try {
             noteEl.textContent = 'Initializing WebGPU...';
             unetSession = await ort.InferenceSession.create(unetBuf, gpuOpts);
-            noteEl.textContent = 'Warming up...';
+            noteEl.textContent = 'Warming up GPU...';
             await unetSession.run(warmupInputs);
             usingWebGPU = true;
-            console.log('WebGPU session OK');
         } catch (e) {
             console.warn('WebGPU failed:', e.message);
             unetSession = null;
@@ -489,7 +463,7 @@ async function loadModels() {
         unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
     }
 
-    const textBuf = await fetchSplit(MODELS.textEnc.url, MODELS.textEnc.size, SPLIT, (p, speed) => {
+    const textBuf = await fetchSplit(models.textEnc.url, models.textEnc.size, SPLIT, (p, speed) => {
         document.getElementById('text-bar').style.width = (p*100)+'%';
         document.getElementById('text-pct').textContent  = Math.round(p*100)+'%';
         noteEl.textContent = `${speed.toFixed(1)} MB/s`;
@@ -513,8 +487,7 @@ async function switchMode(mode) {
         unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
         usingWebGPU = false;
     }
-    updateModeUI();
-    sketchDirty = true;
+    updateModeUI(); sketchDirty = true;
 }
 
 function updateModeUI() {
@@ -525,8 +498,7 @@ function updateModeUI() {
 
 async function fallbackToWasm() {
     unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
-    usingWebGPU = false;
-    updateModeUI();
+    usingWebGPU = false; updateModeUI();
 }
 
 // ============================================================
@@ -541,8 +513,6 @@ const genBar = document.getElementById('gen-bar');
 
 sketchCtx.fillStyle = '#fff';
 sketchCtx.fillRect(0, 0, 512, 512);
-
-// Placeholder
 outputCtx.fillStyle = '#f2f2f7';
 outputCtx.fillRect(0, 0, 512, 512);
 outputCtx.fillStyle = '#aeaeb2';
@@ -550,45 +520,32 @@ outputCtx.font = '500 15px -apple-system, system-ui, sans-serif';
 outputCtx.textAlign = 'center';
 outputCtx.fillText('Draw something to generate', 256, 260);
 
-let currentTool = 'pen';
-let drawing = false;
-let lastX = 0, lastY = 0;
-let history = [];
-let sketchDirty = true;
+let currentTool = 'pen', drawing = false, lastX = 0, lastY = 0;
+let history = [], sketchDirty = true;
 
 function canvasCoords(e) {
     const r = sketchEl.getBoundingClientRect();
-    const cx = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
-    const cy = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
-    return { x: (cx - r.left) * 512 / r.width, y: (cy - r.top) * 512 / r.height };
+    return {
+        x: ((e.clientX ?? e.touches?.[0]?.clientX ?? 0) - r.left) * 512 / r.width,
+        y: ((e.clientY ?? e.touches?.[0]?.clientY ?? 0) - r.top) * 512 / r.height
+    };
 }
-
 function pointerDown(e) {
     e.preventDefault(); drawing = true;
-    const p = canvasCoords(e);
-    lastX = p.x; lastY = p.y;
+    const p = canvasCoords(e); lastX = p.x; lastY = p.y;
     history.push(sketchCtx.getImageData(0, 0, 512, 512));
     if (history.length > 30) history.shift();
 }
-
 function pointerMove(e) {
-    e.preventDefault();
-    updateBrushPreview(e);
+    e.preventDefault(); updateBrushPreview(e);
     if (!drawing) return;
     const p = canvasCoords(e);
-    const size = +document.getElementById('brush-size').value;
-    sketchCtx.beginPath();
-    sketchCtx.moveTo(lastX, lastY);
-    sketchCtx.lineTo(p.x, p.y);
+    sketchCtx.beginPath(); sketchCtx.moveTo(lastX, lastY); sketchCtx.lineTo(p.x, p.y);
     sketchCtx.strokeStyle = currentTool === 'pen' ? '#000' : '#fff';
-    sketchCtx.lineWidth = size;
-    sketchCtx.lineCap = 'round';
-    sketchCtx.lineJoin = 'round';
-    sketchCtx.stroke();
-    lastX = p.x; lastY = p.y;
-    sketchDirty = true;
+    sketchCtx.lineWidth = +document.getElementById('brush-size').value;
+    sketchCtx.lineCap = 'round'; sketchCtx.lineJoin = 'round'; sketchCtx.stroke();
+    lastX = p.x; lastY = p.y; sketchDirty = true;
 }
-
 function pointerUp(e) { if(e) e.preventDefault(); drawing = false; }
 
 sketchEl.addEventListener('pointerdown', pointerDown);
@@ -602,15 +559,9 @@ const brushPreview = document.getElementById('brush-preview');
 function updateBrushPreview(e) {
     const r = sketchEl.getBoundingClientRect();
     const cx = e.clientX ?? 0, cy = e.clientY ?? 0;
-    if (cx < r.left || cx > r.right || cy < r.top || cy > r.bottom) {
-        brushPreview.style.display = 'none'; return;
-    }
+    if (cx < r.left || cx > r.right || cy < r.top || cy > r.bottom) { brushPreview.style.display = 'none'; return; }
     const sz = +document.getElementById('brush-size').value * (r.width / 512);
-    brushPreview.style.display = 'block';
-    brushPreview.style.width = sz + 'px';
-    brushPreview.style.height = sz + 'px';
-    brushPreview.style.left = (cx - sz/2) + 'px';
-    brushPreview.style.top = (cy - sz/2) + 'px';
+    Object.assign(brushPreview.style, { display: 'block', width: sz+'px', height: sz+'px', left: (cx-sz/2)+'px', top: (cy-sz/2)+'px' });
 }
 sketchEl.addEventListener('pointerleave', () => { brushPreview.style.display = 'none'; });
 
@@ -624,34 +575,22 @@ document.querySelectorAll('[data-tool]').forEach(btn => {
         sketchEl.style.cursor = currentTool === 'pen' ? 'crosshair' : 'cell';
     });
 });
-
 document.getElementById('btn-undo').addEventListener('click', () => {
     if (history.length) { sketchCtx.putImageData(history.pop(), 0, 0); sketchDirty = true; }
 });
 document.getElementById('btn-clear').addEventListener('click', () => {
     history.push(sketchCtx.getImageData(0, 0, 512, 512));
-    sketchCtx.fillStyle = '#fff';
-    sketchCtx.fillRect(0, 0, 512, 512);
-    sketchDirty = true;
+    sketchCtx.fillStyle = '#fff'; sketchCtx.fillRect(0, 0, 512, 512); sketchDirty = true;
 });
-document.getElementById('btn-reroll').addEventListener('click', () => {
-    state.latents = makeLatents(); sketchDirty = true;
-});
-document.getElementById('btn-mode').addEventListener('click', () => {
-    switchMode(usingWebGPU ? 'cpu' : 'gpu');
-});
+document.getElementById('btn-reroll').addEventListener('click', () => { state.latents = makeLatents(); sketchDirty = true; });
+document.getElementById('btn-mode').addEventListener('click', () => switchMode(usingWebGPU ? 'cpu' : 'gpu'));
 document.getElementById('btn-save').addEventListener('click', () => {
     const a = document.createElement('a');
-    a.download = `canr-${Date.now()}.png`;
-    a.href = outputEl.toDataURL('image/png');
-    a.click();
+    a.download = `canr-${Date.now()}.png`; a.href = outputEl.toDataURL('image/png'); a.click();
 });
 document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
-        e.preventDefault();
-        document.getElementById('btn-undo').click();
-    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); document.getElementById('btn-undo').click(); }
 });
 
 // ============================================================
@@ -659,30 +598,20 @@ document.addEventListener('keydown', e => {
 // ============================================================
 function makeLatents() {
     return new ort.Tensor('float32', Float32Array.from(
-        { length: 1*4*64*64 },
-        () => Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random())
-    ), [1, 4, 64, 64]);
+        { length: 1*4*64*64 }, () => Math.sqrt(-2*Math.log(Math.random())) * Math.cos(2*Math.PI*Math.random())
+    ), [1,4,64,64]);
 }
-
-const state = {
-    promptEmbeds: new ort.Tensor('float32', new Float32Array(1*77*768), [1,77,768]),
-    promptDirty: true,
-    latents: makeLatents(),
-    blackCount: 0,
-};
+const state = { promptEmbeds: new ort.Tensor('float32', new Float32Array(1*77*768), [1,77,768]), promptDirty: true, latents: makeLatents(), blackCount: 0 };
 
 function getSketchTensor() {
-    const px = sketchCtx.getImageData(0, 0, 512, 512).data;
+    const px = sketchCtx.getImageData(0,0,512,512).data;
     const g = new Uint8Array(262144);
-    for (let i = 0; i < 262144; i++) g[i] = px[i << 2];
-    return new ort.Tensor('uint8', g, [512, 512]);
+    for (let i = 0; i < 262144; i++) g[i] = px[i<<2];
+    return new ort.Tensor('uint8', g, [512,512]);
 }
-
 async function encodePrompt(text) {
     const tok = tokenizer([text], { padding: true, truncation: true, max_length: tokenizer.model_max_length });
-    return (await textSession.run({
-        input_ids: new ort.Tensor('int64', tok.input_ids.data, [1, tokenizer.model_max_length])
-    })).output_embeddings;
+    return (await textSession.run({ input_ids: new ort.Tensor('int64', tok.input_ids.data, [1, tokenizer.model_max_length]) })).output_embeddings;
 }
 
 const scaleTensor = new ort.Tensor('float32', new Float32Array(1), [1]);
@@ -690,26 +619,14 @@ const outputImgData = new ImageData(512, 512);
 
 async function runInference() {
     scaleTensor.data[0] = +document.getElementById('strength').value / 100;
-    const result = await unetSession.run({
-        image: getSketchTensor(),
-        prompt_embeds: state.promptEmbeds,
-        conditioning_scale: scaleTensor,
-        latents: state.latents,
-    });
+    const result = await unetSession.run({ image: getSketchTensor(), prompt_embeds: state.promptEmbeds, conditioning_scale: scaleTensor, latents: state.latents });
     const d = result.output_image.data;
-
-    // Black output detection
     let sum = 0;
     for (let i = 0; i < 7500; i++) sum += d[i];
-    if (sum === 0) {
-        if (++state.blackCount > 5) { state.blackCount = 0; await fallbackToWasm(); return; }
-    } else { state.blackCount = 0; }
-
+    if (sum === 0) { if (++state.blackCount > 5) { state.blackCount = 0; await fallbackToWasm(); return; } }
+    else { state.blackCount = 0; }
     const rgba = outputImgData.data;
-    for (let i = 0; i < 262144; i++) {
-        const i3 = i * 3, i4 = i << 2;
-        rgba[i4] = d[i3]; rgba[i4+1] = d[i3+1]; rgba[i4+2] = d[i3+2]; rgba[i4+3] = 255;
-    }
+    for (let i = 0; i < 262144; i++) { const i3=i*3, i4=i<<2; rgba[i4]=d[i3]; rgba[i4+1]=d[i3+1]; rgba[i4+2]=d[i3+2]; rgba[i4+3]=255; }
     outputCtx.putImageData(outputImgData, 0, 0);
 }
 
@@ -717,12 +634,8 @@ async function runInference() {
 //  PROMPT
 // ============================================================
 const promptEl = document.getElementById('prompt');
-let lastEncodedPrompt = '';
-let promptTimer = null;
-promptEl.addEventListener('input', () => {
-    clearTimeout(promptTimer);
-    promptTimer = setTimeout(() => { state.promptDirty = true; }, 500);
-});
+let lastEncodedPrompt = '', promptTimer = null;
+promptEl.addEventListener('input', () => { clearTimeout(promptTimer); promptTimer = setTimeout(() => { state.promptDirty = true; }, 500); });
 
 async function refreshPrompt() {
     if (!state.promptDirty || !textSession) return;
@@ -730,34 +643,28 @@ async function refreshPrompt() {
     if (text === lastEncodedPrompt) { state.promptDirty = false; return; }
     state.promptDirty = false;
     state.promptEmbeds = await encodePrompt(text);
-    lastEncodedPrompt = text;
-    sketchDirty = true;
+    lastEncodedPrompt = text; sketchDirty = true;
 }
 
 // ============================================================
 //  MAIN LOOP
 // ============================================================
 let busy = false;
-
 async function loop() {
     if (!unetSession) { setTimeout(loop, 200); return; }
     await refreshPrompt();
-
     if (sketchDirty && !busy) {
         busy = true; sketchDirty = false;
         genBar.classList.add('active');
         const t0 = performance.now();
         try {
             await runInference();
-            const ms = Math.round(performance.now() - t0);
-            statusEl.textContent = `${ms}ms`;
+            statusEl.textContent = `${Math.round(performance.now()-t0)}ms`;
         } catch (err) {
-            console.error('Inference error:', err);
             if (usingWebGPU) { await fallbackToWasm(); sketchDirty = true; }
-            else { statusEl.textContent = 'Error'; }
+            else statusEl.textContent = 'Error';
         }
-        genBar.classList.remove('active');
-        busy = false;
+        genBar.classList.remove('active'); busy = false;
     }
     setTimeout(() => requestAnimationFrame(loop), 60);
 }
@@ -766,9 +673,10 @@ async function loop() {
 //  INIT
 // ============================================================
 async function init() {
+    await waitForModelSelect();
     try {
         await loadModels();
-        document.getElementById('loading-screen').classList.add('done');
+        document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('app').classList.add('active');
         updateModeUI();
         statusEl.textContent = 'Ready';
@@ -777,11 +685,9 @@ async function init() {
     } catch (err) {
         console.error('Init error:', err);
         const el = document.getElementById('load-error');
-        el.style.display = 'block';
-        el.textContent = err.message;
+        el.style.display = 'block'; el.textContent = err.message;
     }
 }
-
 init();
 </script>
 </body>
