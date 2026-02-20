@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0a0a1a">
     <title>CANR — Canvas to Reality</title>
     <link rel="manifest" href="manifest.json">
@@ -262,7 +261,7 @@ import { AutoTokenizer } from 'https://cdn.jsdelivr.net/npm/@huggingface/transfo
 // ============================================================
 //  CONFIG
 // ============================================================
-const MODEL_BASE = 'https://cdn.jsdelivr.net/gh/lsb/sdxs-controlnet-sketch@trunk';
+const MODEL_BASE = 'https://raw.githubusercontent.com/lsb/sdxs-controlnet-sketch/trunk';
 const MODELS = {
     unet:    { url: `${MODEL_BASE}/sd512q68.onnx`,            size: 428957688 },
     textEnc: { url: `${MODEL_BASE}/sd_text_encoder_q8.onnx`,  size: 123815043 },
@@ -275,10 +274,17 @@ const PARALLEL = 4; // concurrent chunk downloads
 // ============================================================
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-async function fetchChunk(url) {
-    const res = await fetch(url, { mode: 'cors' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
-    return new Uint8Array(await res.arrayBuffer());
+async function fetchChunk(url, retries = 3) {
+    for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+            const res = await fetch(url, { mode: 'cors' });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return new Uint8Array(await res.arrayBuffer());
+        } catch (e) {
+            if (attempt === retries - 1) throw new Error(`Failed after ${retries} attempts: ${url} (${e.message})`);
+            await sleep(1000 * (attempt + 1));
+        }
+    }
 }
 
 async function fetchSplit(url, total, split, onProg) {
