@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a1a">
+    <title>CANR — Canvas to Reality</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>">
+    <style>
+        :root {
+            --bg: #0a0a1a;
+            --surface: #151528;
+            --border: #2a2a4a;
+            --text: #e0e0f0;
+            --dim: #8888aa;
+            --accent: #6c63ff;
+            --accent2: #ff6584;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ===== Loading Screen ===== */
+        #loading-screen {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: var(--bg); z-index: 1000;
+            transition: opacity 0.6s ease;
+        }
+        #loading-screen.done { opacity: 0; pointer-events: none; }
+        #loading-screen h1 {
+            font-size: 2.5rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        #loading-screen .subtitle { color: var(--dim); margin: 0.5rem 0 2.5rem; font-size: 0.95rem; }
+        .load-section { width: min(420px, 85vw); margin-bottom: 1.2rem; }
+        .load-label { font-size: 0.8rem; color: var(--dim); display: flex; justify-content: space-between; }
+        .load-bar { height: 5px; background: var(--surface); border-radius: 3px; margin-top: 0.4rem; overflow: hidden; }
+        .load-fill {
+            height: 100%; width: 0%; border-radius: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transition: width 0.3s ease;
+        }
+        .load-note { color: var(--dim); font-size: 0.75rem; margin-top: 2rem; text-align: center; }
+        .load-error { color: var(--accent2); margin-top: 1rem; font-size: 0.85rem; max-width: 80vw; text-align: center; }
+
+        /* ===== App Layout ===== */
+        #app {
+            display: none; flex-direction: column;
+            height: 100dvh;
+        }
+        #app.active { display: flex; }
+
+        /* Header */
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.4rem 1rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0; min-height: 40px;
+        }
+        .header .logo {
+            font-size: 1rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        #status { font-size: 0.75rem; color: var(--dim); font-family: monospace; }
+
+        /* Canvas Area */
+        .canvas-area {
+            flex: 1; display: flex; gap: 4px;
+            padding: 0.5rem; min-height: 0; overflow: hidden;
+        }
+        .pane {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; min-width: 0;
+        }
+        .pane-label {
+            font-size: 0.65rem; color: var(--dim);
+            text-transform: uppercase; letter-spacing: 0.15em;
+            margin-bottom: 0.3rem; flex-shrink: 0;
+        }
+        .pane-frame {
+            flex: 1; display: flex; align-items: center;
+            justify-content: center; min-height: 0; width: 100%;
+        }
+        canvas {
+            border-radius: 8px;
+            max-width: 100%; max-height: 100%;
+        }
+        #sketch {
+            background: #fff; cursor: crosshair; touch-action: none;
+            box-shadow: 0 0 0 1px var(--border);
+        }
+        #output {
+            background: var(--surface);
+            box-shadow: 0 0 0 1px var(--border);
+        }
+        .output-pane { position: relative; }
+        .generating-bar {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            height: 3px; overflow: hidden; opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .generating-bar.active { opacity: 1; }
+        .generating-bar::after {
+            content: ''; display: block; height: 100%;
+            background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+            animation: slide 1.2s ease-in-out infinite;
+        }
+        @keyframes slide { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 0.75rem;
+            border-top: 1px solid var(--border);
+            flex-shrink: 0; flex-wrap: wrap;
+        }
+        .tgroup { display: flex; gap: 0.2rem; align-items: center; }
+        .tgroup.push-right { margin-left: auto; }
+        .tlabel { font-size: 0.65rem; color: var(--dim); margin-right: 0.2rem; white-space: nowrap; }
+        button {
+            background: var(--surface); color: var(--text);
+            border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.35rem 0.7rem; font-size: 0.78rem;
+            cursor: pointer; transition: all 0.15s; white-space: nowrap;
+        }
+        button:active { transform: scale(0.95); }
+        button:hover { border-color: var(--accent); }
+        button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+        input[type=range] {
+            -webkit-appearance: none; appearance: none;
+            height: 4px; background: var(--border); border-radius: 2px; outline: none;
+            width: 70px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 14px; height: 14px;
+            background: var(--accent); border-radius: 50%; cursor: pointer;
+        }
+
+        /* Prompt */
+        .prompt-bar {
+            display: flex; gap: 0.4rem; padding: 0.4rem 0.75rem;
+            border-top: 1px solid var(--border); flex-shrink: 0;
+        }
+        #prompt {
+            flex: 1; background: var(--surface); color: var(--text);
+            border: 1px solid var(--border); border-radius: 6px;
+            padding: 0.45rem 0.7rem; font-size: 0.82rem; outline: none;
+        }
+        #prompt:focus { border-color: var(--accent); }
+        #prompt::placeholder { color: var(--dim); }
+
+        /* Responsive */
+        @media (max-width: 700px) {
+            .canvas-area { flex-direction: column; }
+            .pane { flex: none; height: 42%; }
+            .tgroup.push-right { margin-left: 0; }
+            .toolbar { justify-content: center; }
+            input[type=range] { width: 55px; }
+        }
+
+        /* brush size preview */
+        #brush-preview {
+            position: fixed; pointer-events: none; z-index: 500;
+            border: 1.5px solid var(--accent); border-radius: 50%;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loading-screen">
+    <h1>CANR</h1>
+    <p class="subtitle">Canvas to Reality &mdash; AI Sketch Converter</p>
+    <div class="load-section">
+        <div class="load-label"><span>UNet + ControlNet + VAE</span><span id="unet-pct">0%</span></div>
+        <div class="load-bar"><div class="load-fill" id="unet-bar"></div></div>
+    </div>
+    <div class="load-section">
+        <div class="load-label"><span>CLIP Text Encoder</span><span id="text-pct">0%</span></div>
+        <div class="load-bar"><div class="load-fill" id="text-bar"></div></div>
+    </div>
+    <p class="load-note">First load ~553 MB &middot; cached after download</p>
+    <p class="load-error" id="load-error" style="display:none"></p>
+</div>
+
+<!-- App -->
+<div id="app">
+    <div class="header">
+        <span class="logo">CANR</span>
+        <span id="status">Loading...</span>
+    </div>
+
+    <div class="canvas-area">
+        <div class="pane">
+            <span class="pane-label">Sketch</span>
+            <div class="pane-frame">
+                <canvas id="sketch" width="512" height="512"></canvas>
+            </div>
+        </div>
+        <div class="pane output-pane">
+            <span class="pane-label">Generated</span>
+            <div class="pane-frame">
+                <canvas id="output" width="512" height="512"></canvas>
+            </div>
+            <div class="generating-bar" id="gen-bar"></div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="tgroup">
+            <button id="btn-pen" class="on" data-tool="pen">Pen</button>
+            <button id="btn-eraser" data-tool="eraser">Eraser</button>
+        </div>
+        <div class="tgroup">
+            <span class="tlabel">Size</span>
+            <input type="range" id="brush-size" min="1" max="50" value="5">
+        </div>
+        <div class="tgroup">
+            <span class="tlabel">Strength</span>
+            <input type="range" id="strength" min="20" max="100" value="70">
+        </div>
+        <div class="tgroup push-right">
+            <button id="btn-undo">Undo</button>
+            <button id="btn-clear">Clear</button>
+            <button id="btn-reroll">Reroll</button>
+            <button id="btn-save">Save</button>
+        </div>
+    </div>
+
+    <div class="prompt-bar">
+        <input type="text" id="prompt" placeholder="Describe what you're drawing... (e.g., a cat on a hill, watercolor style)"
+               value="watercolor painting of a landscape with mountains and trees">
+    </div>
+</div>
+
+<div id="brush-preview"></div>
+
+<!-- ONNX Runtime -->
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.all.js"></script>
+
+<script type="module">
+import { AutoTokenizer } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.1.2';
+
+// ============================================================
+//  CONFIG
+// ============================================================
+const MODEL_BASE = 'https://raw.githubusercontent.com/lsb/sdxs-controlnet-sketch/trunk';
+const MODELS = {
+    unet:    { url: `${MODEL_BASE}/sd512q68.onnx`,            size: 428957688 },
+    textEnc: { url: `${MODEL_BASE}/sd_text_encoder_q8.onnx`,  size: 123815043 },
+};
+const SPLIT = 50_000_000;
+
+// ============================================================
+//  UTILS
+// ============================================================
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+async function fetchChunk(url) {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
+    return new Uint8Array(await res.arrayBuffer());
+}
+
+async function fetchSplit(url, total, split, onProg) {
+    const buf = new Uint8Array(total);
+    const n = Math.ceil(total / split);
+    for (let i = 0; i < n; i++) {
+        const chunk = await fetchChunk(`${url}.${String(i).padStart(3,'0')}.db`);
+        buf.set(chunk, i * split);
+        onProg?.((i + 1) / n);
+        await sleep(0);
+    }
+    return buf;
+}
+
+// ============================================================
+//  ONNX SESSION MANAGEMENT
+// ============================================================
+ort.env.wasm.numThreads = navigator.hardwareConcurrency || 8;
+
+const gpuOpts  = { executionProviders: ['webgpu','wasm'], intraOpNumThreads: 16, interOpNumThreads: 16 };
+const cpuOpts  = { executionProviders: ['wasm'],          intraOpNumThreads: 16, interOpNumThreads: 16 };
+
+let unetSession = null;
+let textSession = null;
+let tokenizer   = null;
+let unetBuf     = null;   // keep for WebGPU→WASM fallback
+
+async function loadModels() {
+    // UNet (WebGPU accelerated)
+    unetBuf = await fetchSplit(MODELS.unet.url, MODELS.unet.size, SPLIT, p => {
+        document.getElementById('unet-bar').style.width  = (p*100)+'%';
+        document.getElementById('unet-pct').textContent   = Math.round(p*100)+'%';
+    });
+    unetSession = await ort.InferenceSession.create(unetBuf, gpuOpts);
+
+    // Text encoder (CPU is fine, small model)
+    const textBuf = await fetchSplit(MODELS.textEnc.url, MODELS.textEnc.size, SPLIT, p => {
+        document.getElementById('text-bar').style.width = (p*100)+'%';
+        document.getElementById('text-pct').textContent  = Math.round(p*100)+'%';
+    });
+    textSession = await ort.InferenceSession.create(textBuf, cpuOpts);
+
+    tokenizer = await AutoTokenizer.from_pretrained('Xenova/clip-vit-large-patch14');
+}
+
+async function fallbackToWasm() {
+    if (!unetBuf) return;
+    statusEl.textContent = 'Switching to WASM...';
+    unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
+    statusEl.textContent = 'WASM mode';
+}
+
+// ============================================================
+//  DRAWING CANVAS
+// ============================================================
+const sketchEl = document.getElementById('sketch');
+const sketchCtx = sketchEl.getContext('2d', { willReadFrequently: true });
+const outputEl = document.getElementById('output');
+const outputCtx = outputEl.getContext('2d');
+const statusEl = document.getElementById('status');
+const genBar   = document.getElementById('gen-bar');
+
+// White background
+sketchCtx.fillStyle = '#fff';
+sketchCtx.fillRect(0, 0, 512, 512);
+
+// Gray placeholder on output
+outputCtx.fillStyle = '#151528';
+outputCtx.fillRect(0, 0, 512, 512);
+outputCtx.fillStyle = '#8888aa';
+outputCtx.font = '16px sans-serif';
+outputCtx.textAlign = 'center';
+outputCtx.fillText('Draw something on the left!', 256, 260);
+
+let currentTool = 'pen';
+let drawing = false;
+let lastX = 0, lastY = 0;
+let history = [];       // undo stack (ImageData)
+let sketchDirty = true; // trigger first render
+
+function canvasCoords(e) {
+    const r = sketchEl.getBoundingClientRect();
+    const cx = e.clientX ?? e.touches?.[0]?.clientX ?? 0;
+    const cy = e.clientY ?? e.touches?.[0]?.clientY ?? 0;
+    return { x: (cx - r.left) * 512 / r.width, y: (cy - r.top) * 512 / r.height };
+}
+
+function pointerDown(e) {
+    e.preventDefault();
+    drawing = true;
+    const p = canvasCoords(e);
+    lastX = p.x; lastY = p.y;
+    // save for undo
+    history.push(sketchCtx.getImageData(0, 0, 512, 512));
+    if (history.length > 30) history.shift();
+}
+
+function pointerMove(e) {
+    e.preventDefault();
+    // brush preview
+    updateBrushPreview(e);
+    if (!drawing) return;
+    const p = canvasCoords(e);
+    const size = +document.getElementById('brush-size').value;
+    sketchCtx.beginPath();
+    sketchCtx.moveTo(lastX, lastY);
+    sketchCtx.lineTo(p.x, p.y);
+    sketchCtx.strokeStyle = currentTool === 'pen' ? '#000' : '#fff';
+    sketchCtx.lineWidth = size;
+    sketchCtx.lineCap = 'round';
+    sketchCtx.lineJoin = 'round';
+    sketchCtx.stroke();
+    lastX = p.x; lastY = p.y;
+    sketchDirty = true;
+}
+
+function pointerUp(e) { if(e) e.preventDefault(); drawing = false; }
+
+sketchEl.addEventListener('pointerdown',  pointerDown);
+sketchEl.addEventListener('pointermove',  pointerMove);
+sketchEl.addEventListener('pointerup',    pointerUp);
+sketchEl.addEventListener('pointerleave', pointerUp);
+sketchEl.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+sketchEl.addEventListener('touchmove',  e => e.preventDefault(), { passive: false });
+
+// Brush size preview circle
+const brushPreview = document.getElementById('brush-preview');
+function updateBrushPreview(e) {
+    const r = sketchEl.getBoundingClientRect();
+    const cx = e.clientX ?? 0, cy = e.clientY ?? 0;
+    if (cx < r.left || cx > r.right || cy < r.top || cy > r.bottom) {
+        brushPreview.style.display = 'none'; return;
+    }
+    const sz = +document.getElementById('brush-size').value;
+    const displaySz = sz * (r.width / 512);
+    brushPreview.style.display = 'block';
+    brushPreview.style.width  = displaySz + 'px';
+    brushPreview.style.height = displaySz + 'px';
+    brushPreview.style.left   = (cx - displaySz/2) + 'px';
+    brushPreview.style.top    = (cy - displaySz/2) + 'px';
+}
+sketchEl.addEventListener('pointerleave', () => { brushPreview.style.display = 'none'; });
+
+// ============================================================
+//  TOOLBAR
+// ============================================================
+document.querySelectorAll('[data-tool]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        currentTool = btn.dataset.tool;
+        document.getElementById('btn-pen').classList.toggle('on', currentTool === 'pen');
+        document.getElementById('btn-eraser').classList.toggle('on', currentTool === 'eraser');
+        sketchEl.style.cursor = currentTool === 'pen' ? 'crosshair' : 'cell';
+    });
+});
+
+document.getElementById('btn-undo').addEventListener('click', () => {
+    if (history.length) { sketchCtx.putImageData(history.pop(), 0, 0); sketchDirty = true; }
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+    history.push(sketchCtx.getImageData(0, 0, 512, 512));
+    sketchCtx.fillStyle = '#fff';
+    sketchCtx.fillRect(0, 0, 512, 512);
+    sketchDirty = true;
+});
+
+document.getElementById('btn-reroll').addEventListener('click', () => {
+    state.latents = makeLatents();
+    sketchDirty = true;
+});
+
+document.getElementById('btn-save').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.download = `canr-${Date.now()}.png`;
+    a.href = outputEl.toDataURL('image/png');
+    a.click();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT') return;
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        e.preventDefault();
+        document.getElementById('btn-undo').click();
+    }
+});
+
+// ============================================================
+//  INFERENCE STATE
+// ============================================================
+function makeLatents() {
+    return new ort.Tensor('float32', Float32Array.from(
+        { length: 1*4*64*64 },
+        () => Math.sqrt(-2 * Math.log(Math.random())) * Math.cos(2 * Math.PI * Math.random())
+    ), [1, 4, 64, 64]);
+}
+
+const state = {
+    promptEmbeds: new ort.Tensor('float32', new Float32Array(1*77*768), [1, 77, 768]),
+    promptDirty: true,
+    latents: makeLatents(),
+    blackCount: 0,
+};
+
+function getSketchTensor() {
+    const px = sketchCtx.getImageData(0, 0, 512, 512).data;
+    const g = new Uint8Array(512 * 512);
+    for (let i = 0; i < 262144; i++) g[i] = px[i << 2]; // R channel
+    return new ort.Tensor('uint8', g, [512, 512]);
+}
+
+async function encodePrompt(text) {
+    const tok = tokenizer([text], { padding: true, truncation: true, max_length: tokenizer.model_max_length });
+    const ids = new ort.Tensor('int64', tok.input_ids.data, [1, tokenizer.model_max_length]);
+    return (await textSession.run({ input_ids: ids })).output_embeddings;
+}
+
+async function runInference() {
+    const scale = +document.getElementById('strength').value / 100;
+    const result = await unetSession.run({
+        image:              getSketchTensor(),
+        prompt_embeds:      state.promptEmbeds,
+        conditioning_scale: new ort.Tensor('float32', [scale], [1]),
+        latents:            state.latents,
+    });
+
+    const d = result.output_image.data;
+
+    // Detect black output → WebGPU failure
+    let sum = 0;
+    for (let i = 0; i < 7500; i++) sum += d[i];
+    if (sum === 0) {
+        if (++state.blackCount > 5) {
+            state.blackCount = 0;
+            await fallbackToWasm();
+            return;
+        }
+    } else {
+        state.blackCount = 0;
+    }
+
+    // Paint to output canvas
+    const img = outputCtx.createImageData(512, 512);
+    const rgba = img.data;
+    for (let i = 0; i < 262144; i++) {
+        const i3 = i * 3, i4 = i << 2;
+        rgba[i4]     = d[i3];
+        rgba[i4 + 1] = d[i3 + 1];
+        rgba[i4 + 2] = d[i3 + 2];
+        rgba[i4 + 3] = 255;
+    }
+    outputCtx.putImageData(img, 0, 0);
+}
+
+// ============================================================
+//  PROMPT INPUT
+// ============================================================
+const promptEl = document.getElementById('prompt');
+promptEl.addEventListener('input', () => { state.promptDirty = true; });
+
+async function refreshPrompt() {
+    if (!state.promptDirty || !textSession) return;
+    const text = promptEl.value.trim() || 'a drawing';
+    state.promptDirty = false;
+    const t0 = performance.now();
+    state.promptEmbeds = await encodePrompt(text);
+    console.log(`Prompt encoded in ${Math.round(performance.now()-t0)}ms`);
+    sketchDirty = true;
+}
+
+// ============================================================
+//  MAIN LOOP
+// ============================================================
+let busy = false;
+
+async function loop() {
+    if (!unetSession) { setTimeout(loop, 200); return; }
+
+    await refreshPrompt();
+
+    if (sketchDirty && !busy) {
+        busy = true;
+        sketchDirty = false;
+        genBar.classList.add('active');
+
+        const t0 = performance.now();
+        try {
+            await runInference();
+            const ms = Math.round(performance.now() - t0);
+            statusEl.textContent = `${ms}ms (${ms > 0 ? Math.round(1000/ms) : '?'} FPS)`;
+        } catch (err) {
+            console.error('Inference error:', err);
+            statusEl.textContent = 'Error';
+        }
+
+        genBar.classList.remove('active');
+        busy = false;
+    }
+
+    setTimeout(() => requestAnimationFrame(loop), 60);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+async function init() {
+    try {
+        await loadModels();
+        document.getElementById('loading-screen').classList.add('done');
+        document.getElementById('app').classList.add('active');
+        statusEl.textContent = 'Ready';
+        state.promptDirty = true;
+        loop();
+    } catch (err) {
+        console.error('Init error:', err);
+        const errEl = document.getElementById('load-error');
+        errEl.style.display = 'block';
+        errEl.textContent = `Error: ${err.message}`;
+    }
+}
+
+init();
+</script>
+</body>
+</html>

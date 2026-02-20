@@ -1,0 +1,18 @@
+{
+  "name": "CANR — Canvas to Reality",
+  "short_name": "CANR",
+  "description": "Real-time AI sketch to realistic image converter using WebGPU",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a1a",
+  "theme_color": "#0a0a1a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230a0a1a'/><text x='50' y='72' font-size='60' text-anchor='middle'>🎨</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
