@@ -240,6 +240,7 @@
             <button id="btn-undo">Undo</button>
             <button id="btn-clear">Clear</button>
             <button id="btn-reroll">Reroll</button>
+            <button id="btn-mode">CPU</button>
             <button id="btn-save">Save</button>
         </div>
     </div>
@@ -394,11 +395,39 @@ async function loadModels() {
     tokenizer = await AutoTokenizer.from_pretrained('Xenova/clip-vit-large-patch14');
 }
 
-async function fallbackToWasm() {
+async function switchMode(forceMode) {
     if (!unetBuf) return;
-    statusEl.textContent = 'Switching to WASM...';
+    const wantGPU = forceMode === 'gpu';
+    if (wantGPU === usingWebGPU) return;
+
+    statusEl.textContent = wantGPU ? 'Switching to WebGPU...' : 'Switching to WASM...';
+    try {
+        if (wantGPU) {
+            unetSession = await ort.InferenceSession.create(unetBuf, gpuOpts);
+            usingWebGPU = true;
+        } else {
+            unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
+            usingWebGPU = false;
+        }
+    } catch (e) {
+        console.warn('Mode switch failed:', e.message);
+        unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
+        usingWebGPU = false;
+    }
+    updateModeButton();
+    sketchDirty = true;
+}
+
+function updateModeButton() {
+    const btn = document.getElementById('btn-mode');
+    btn.textContent = usingWebGPU ? 'GPU' : 'CPU';
+    btn.classList.toggle('on', usingWebGPU);
+}
+
+async function fallbackToWasm() {
     unetSession = await ort.InferenceSession.create(unetBuf, cpuOpts);
     usingWebGPU = false;
+    updateModeButton();
     statusEl.textContent = `WASM mode (${threads} threads)`;
 }
 
@@ -429,7 +458,6 @@ let drawing = false;
 let lastX = 0, lastY = 0;
 let history = [];       // undo stack (ImageData)
 let sketchDirty = true; // trigger first render
-let drawDebounce = null; // debounce timer for inference after drawing
 
 function canvasCoords(e) {
     const r = sketchEl.getBoundingClientRect();
@@ -464,18 +492,10 @@ function pointerMove(e) {
     sketchCtx.lineJoin = 'round';
     sketchCtx.stroke();
     lastX = p.x; lastY = p.y;
-    // Debounce: mark dirty 150ms after last stroke for smoother drawing
-    clearTimeout(drawDebounce);
-    drawDebounce = setTimeout(() => { sketchDirty = true; }, 150);
-}
-
-function pointerUp(e) {
-    if(e) e.preventDefault();
-    drawing = false;
-    // Immediate inference when pen is lifted
-    clearTimeout(drawDebounce);
     sketchDirty = true;
 }
+
+function pointerUp(e) { if(e) e.preventDefault(); drawing = false; }
 
 sketchEl.addEventListener('pointerdown',  pointerDown);
 sketchEl.addEventListener('pointermove',  pointerMove);
@@ -528,6 +548,10 @@ document.getElementById('btn-clear').addEventListener('click', () => {
 document.getElementById('btn-reroll').addEventListener('click', () => {
     state.latents = makeLatents();
     sketchDirty = true;
+});
+
+document.getElementById('btn-mode').addEventListener('click', () => {
+    switchMode(usingWebGPU ? 'cpu' : 'gpu');
 });
 
 document.getElementById('btn-save').addEventListener('click', () => {
@@ -687,6 +711,7 @@ async function init() {
         await loadModels();
         document.getElementById('loading-screen').classList.add('done');
         document.getElementById('app').classList.add('active');
+        updateModeButton();
         statusEl.textContent = usingWebGPU ? 'Ready (WebGPU)' : `Ready (WASM, ${threads} threads)`;
         state.promptDirty = true;
         loop();
