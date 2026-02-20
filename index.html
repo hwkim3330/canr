@@ -197,7 +197,7 @@
         <div class="load-label"><span>CLIP Text Encoder</span><span id="text-pct">0%</span></div>
         <div class="load-bar"><div class="load-fill" id="text-bar"></div></div>
     </div>
-    <p class="load-note">First load ~553 MB &middot; cached after download</p>
+    <p class="load-note" id="load-note">First load ~553 MB &middot; cached after download</p>
     <p class="load-error" id="load-error" style="display:none"></p>
 </div>
 
@@ -262,12 +262,13 @@ import { AutoTokenizer } from 'https://cdn.jsdelivr.net/npm/@huggingface/transfo
 // ============================================================
 //  CONFIG
 // ============================================================
-const MODEL_BASE = 'https://raw.githubusercontent.com/lsb/sdxs-controlnet-sketch/trunk';
+const MODEL_BASE = 'https://cdn.jsdelivr.net/gh/lsb/sdxs-controlnet-sketch@trunk';
 const MODELS = {
     unet:    { url: `${MODEL_BASE}/sd512q68.onnx`,            size: 428957688 },
     textEnc: { url: `${MODEL_BASE}/sd_text_encoder_q8.onnx`,  size: 123815043 },
 };
 const SPLIT = 50_000_000;
+const PARALLEL = 4; // concurrent chunk downloads
 
 // ============================================================
 //  UTILS
@@ -283,11 +284,24 @@ async function fetchChunk(url) {
 async function fetchSplit(url, total, split, onProg) {
     const buf = new Uint8Array(total);
     const n = Math.ceil(total / split);
-    for (let i = 0; i < n; i++) {
-        const chunk = await fetchChunk(`${url}.${String(i).padStart(3,'0')}.db`);
-        buf.set(chunk, i * split);
-        onProg?.((i + 1) / n);
-        await sleep(0);
+    let done = 0;
+    const t0 = performance.now();
+
+    for (let i = 0; i < n; i += PARALLEL) {
+        const batch = [];
+        for (let j = i; j < Math.min(i + PARALLEL, n); j++) {
+            batch.push(
+                fetchChunk(`${url}.${String(j).padStart(3,'0')}.db`).then(chunk => {
+                    buf.set(chunk, j * split);
+                    done++;
+                    const elapsed = (performance.now() - t0) / 1000;
+                    const loaded = done * split;
+                    const speed = loaded / elapsed / 1024 / 1024;
+                    onProg?.(done / n, speed);
+                })
+            );
+        }
+        await Promise.all(batch);
     }
     return buf;
 }
@@ -306,20 +320,27 @@ let tokenizer   = null;
 let unetBuf     = null;   // keep for WebGPU→WASM fallback
 
 async function loadModels() {
+    const noteEl = document.getElementById('load-note');
+
     // UNet (WebGPU accelerated)
-    unetBuf = await fetchSplit(MODELS.unet.url, MODELS.unet.size, SPLIT, p => {
-        document.getElementById('unet-bar').style.width  = (p*100)+'%';
-        document.getElementById('unet-pct').textContent   = Math.round(p*100)+'%';
+    unetBuf = await fetchSplit(MODELS.unet.url, MODELS.unet.size, SPLIT, (p, speed) => {
+        document.getElementById('unet-bar').style.width = (p*100)+'%';
+        document.getElementById('unet-pct').textContent  = Math.round(p*100)+'%';
+        noteEl.textContent = `Downloading... ${speed.toFixed(1)} MB/s`;
     });
+    noteEl.textContent = 'Initializing UNet (WebGPU)...';
     unetSession = await ort.InferenceSession.create(unetBuf, gpuOpts);
 
     // Text encoder (CPU is fine, small model)
-    const textBuf = await fetchSplit(MODELS.textEnc.url, MODELS.textEnc.size, SPLIT, p => {
+    const textBuf = await fetchSplit(MODELS.textEnc.url, MODELS.textEnc.size, SPLIT, (p, speed) => {
         document.getElementById('text-bar').style.width = (p*100)+'%';
         document.getElementById('text-pct').textContent  = Math.round(p*100)+'%';
+        noteEl.textContent = `Downloading... ${speed.toFixed(1)} MB/s`;
     });
+    noteEl.textContent = 'Initializing text encoder...';
     textSession = await ort.InferenceSession.create(textBuf, cpuOpts);
 
+    noteEl.textContent = 'Loading tokenizer...';
     tokenizer = await AutoTokenizer.from_pretrained('Xenova/clip-vit-large-patch14');
 }
 
